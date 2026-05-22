@@ -6,7 +6,7 @@
 // The four functions below are the entire data contract. Both modes implement them.
 
 const MODE = 'demo'; // 'demo' or 'remote'
-const APPS_SCRIPT_URL = ''; // paste deployment URL when going live, e.g. https://script.google.com/macros/s/.../exec
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx6AkQYFDfCyUT2GUNeNoIIV0Pf904Zipuc8KmYNXeHWUldidPHOI-RT03ODij14qJ3sA/exec'; // paste deployment URL when going live, e.g. https://script.google.com/macros/s/.../exec
 
 const LS_RSVP_KEY = 'wedding.rsvps.v1';
 const LS_SESSION_KEY = 'wedding.session.v1';
