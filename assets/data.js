@@ -4,21 +4,21 @@
 // adults (1-2), children (first names), plusOneAllowed (only for singles).
 
 const WEDDING = {
-  coupleFirstNames: ['Jeremy', 'Jess'],
-  coupleDisplay: 'Jeremy & Jess',
+  coupleFirstNames: ['Jess', 'Jeremy'],
+  coupleDisplay: 'Jess & Jeremy',
   dayOne: {
     label: 'Friday, October 2, 2026',
-    title: 'Ceremony & Welcome Dinner',
+    title: 'Ceremony & Dinner',
     location: "Tops'l Farm, Waldoboro, Maine",
-    details: 'Ceremony at 4:00 p.m. in the orchard, followed by dinner under the lights. Intimate gathering — about 30 guests.'
+    details: 'Ceremony at 4:00 p.m. in the woods, followed by dinner in the glass house. Intimate gathering — about 40 guests.'
   },
   dayTwo: {
     label: 'Saturday, October 3, 2026',
-    title: 'Reception',
+    title: 'Lobster Bake & Celebration',
     location: "Tops'l Farm, Waldoboro, Maine",
-    details: 'Cocktails at 5:00 p.m., dinner at 6:30, dancing until late. A bigger crowd, a longer night.'
+    details: 'Cocktails at 5:00 p.m., lobster bake at 6:30, dancing with live band and DJ. Casual, larger group.'
   },
-  contactEmail: 'rsvp@example.com',
+  contactEmail: 'hello@jessandjeremy.com',
   rsvpDeadline: 'August 15, 2026',
   directionsUrl: 'https://maps.app.goo.gl/bbmc8aQQsjghYuvv7',
   registryUrl: '#',
@@ -29,18 +29,61 @@ const WEDDING = {
     { name: 'Sample B&B — Waldoboro', distance: '5 min from venue', note: 'Closest to the farm; small, books up early.', url: '#' },
     { name: 'Sample Hotel — Rockland', distance: '25 min from venue', note: 'Larger property; walkable downtown.', url: '#' }
   ],
-  // Things to do in Midcoast Maine
+  // Things to do in Midcoast Maine — first item opens by default on the page
   thingsToDo: [
-    { name: 'Pemaquid Point Lighthouse', note: 'Iconic lighthouse on the rocks, 30 min south.' },
-    { name: 'Damariscotta', note: 'Walkable downtown for lunch, oysters, and a stroll on the river.' },
-    { name: 'Camden Hills State Park', note: 'Mount Battie summit for the best view in Midcoast.' },
-    { name: 'Monhegan Island day trip', note: 'Ferry from New Harbor; bring layers and good shoes.' }
+    {
+      name: 'Owls Head State Park',
+      tags: ['Outdoors', 'Kids', 'Scenic'],
+      meta: 'Owls Head, ME · 20 min from Waldoboro',
+      note: 'A short, easy trail winds through towering pines to a classic Maine lighthouse perched on a rocky cliff. The views over Penobscot Bay are unforgettable, especially in autumn when the islands go gold. Small rocky beach with picnic area below.'
+    },
+    {
+      name: 'Hidden Valley Nature Center',
+      tags: ['Outdoors', 'Kids'],
+      meta: 'Jefferson, ME · 15 min from Waldoboro',
+      note: 'A 1,000-acre preserve laced with quiet woodland trails, a pond loop, and a working sugar shack. Trail maps at the kiosk; bring bug spray in the early hours.'
+    },
+    {
+      name: 'Quarry Hill Preserve',
+      tags: ['Outdoors', 'Scenic'],
+      meta: "Waldoboro, ME · 5 min from Tops'l",
+      note: 'A short scramble up rough granite to an overlook with sweeping views of the Medomak River valley. Quick out-and-back; about 45 minutes round trip.'
+    },
+    {
+      name: 'Coastal Maine Botanical Gardens',
+      tags: ['Outdoors', 'Kids'],
+      meta: 'Boothbay, ME · 40 min from Waldoboro',
+      note: "300 acres of meticulously kept woodland gardens with a famously good kids' area — five enormous troll sculptures hidden along the paths. Plan two hours, more if it's warm."
+    },
+    {
+      name: 'Farnsworth Art Museum',
+      tags: ['Museum', 'World-Class'],
+      meta: 'Rockland, ME · 30 min from Waldoboro',
+      note: 'A small but extraordinary museum with the largest collection of Wyeth family paintings in the world. The cafe across the street does a very good lobster roll for lunch after.'
+    }
+  ],
+  // FAQ items — both tiers share this baseline for now; the user will diverge them over time.
+  faqBoth: [
+    { title: 'What should I wear?', body: "Friday is garden-formal (think linen suits, long dresses, comfortable shoes — you'll be walking on grass and forest floor). Saturday is festive coastal — bring a sweater for after dark; October in Maine gets chilly once the sun is down." },
+    { title: 'Can I bring a plus-one?', body: 'Your invitation envelope lists everyone we can fit; the RSVP form will let you confirm each guest by name. If someone is missing who should be there, just email us.' },
+    { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options at every meal. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." },
+    { title: 'Is it kid-friendly?', body: "Yes! Kids are welcome at both days. Friday is more intimate and a bit quieter; Saturday is a loud, joyful party. There's plenty of farmland for them to run." },
+    { title: 'What if I get there early?', body: "Check-in for cabins opens at 3:00 p.m. Friday. If you arrive earlier, leave bags at the main farmhouse and explore — there's a small swimming hole on the property and a herd of friendly goats." },
+    { title: 'How do I get from the cabin to the ceremony?', body: "It's a five-minute walk along a lit path. Pack a flashlight (or use your phone) for the walk back after dark on Saturday." }
+  ],
+  faqDay2: [
+    { title: 'What should I wear?', body: "Saturday is festive coastal — think linen, light layers, comfortable shoes for grass. Bring a sweater for after dark; October in Maine gets chilly once the sun is down." },
+    { title: 'Can I bring a plus-one?', body: 'Your invitation envelope lists everyone we can fit; the RSVP form will let you confirm each guest by name. If someone is missing who should be there, just email us.' },
+    { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." },
+    { title: 'Is it kid-friendly?', body: "Yes! Kids are welcome. Saturday is a loud, joyful party with plenty of farmland for them to run." },
+    { title: 'What if I get there early?', body: 'Saturday gates open at 4:30 p.m. If you arrive earlier, the main farmhouse has porches with rocking chairs and there are a few short trails on the property worth a wander.' },
+    { title: 'Where should I park?', body: "Parking is on the farm in a marked grass field, a short walk from the celebration. Signage at the entrance will guide you in; we'll have helpers near the gate." }
   ]
 };
 
 // Admins can look themselves up and reach the admin dashboard.
 // Keep this list short; match is case-insensitive on first or full name.
-const ADMINS = ['Jeremy', 'Jess'];
+const ADMINS = ['Jess', 'Jeremy'];
 
 const HOUSEHOLDS = [
   {

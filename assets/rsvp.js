@@ -1,4 +1,4 @@
-// RSVP wizard — progressive form, one question per screen.
+// RSVP modal — multi-step form. Renders a full-screen modal shell with a progress bar.
 
 (async function () {
   const root = document.getElementById('root');
@@ -11,7 +11,7 @@
 
   const h = await getHousehold(session.householdId);
   if (!h) {
-    root.innerHTML = '<p>We couldn\'t find that invitation. <a href="index.html">Go back</a>.</p>';
+    root.innerHTML = '<p style="text-align:center; padding: 4rem 0;">We couldn\'t find that invitation. <a href="index.html">Go back</a>.</p>';
     return;
   }
 
@@ -25,13 +25,14 @@
 
   const isBoth = h.tier === 'both';
 
-  // Build attendee list (adults + children, in order)
+  // ---------- State ----------
+
   const attendees = [
     ...h.adults.map(a => ({
       name: `${a.firstName} ${a.lastName}`,
       firstName: a.firstName,
       role: 'adult',
-      attending: { day1: isBoth, day2: true }, // default attending all days they're invited
+      attending: { day1: isBoth, day2: true },
       dietary: ''
     })),
     ...h.children.map(name => ({
@@ -44,241 +45,389 @@
   ];
 
   const plusOne = h.plusOneAllowed
-    ? { bringing: false, name: '', attending: { day1: false, day2: true }, dietary: '' }
+    ? { bringing: false, name: '', attending: { day1: isBoth, day2: true }, dietary: '' }
     : null;
 
   const state = {
     attendees,
     plusOne,
+    accommodations: isBoth ? 'onsite' : null,
     notes: '',
-    contactEmail: h.adults[0].email || ''
+    contactEmail: (h.adults[0] && h.adults[0].email) || ''
   };
 
-  // Build step list
+  // ---------- Step plan ----------
+  //   0..N-1                attendees (and children)
+  //   then (optional)       plus-one
+  //   then (if both-day)    accommodations
+  //   then                  notes / message
+  //   then                  review
+  //   then                  success
   const steps = [];
-  attendees.forEach((_, idx) => steps.push({ type: 'attendee', index: idx }));
+  attendees.forEach((_, i) => steps.push({ type: 'attendee', index: i }));
   if (plusOne) steps.push({ type: 'plusOne' });
+  if (isBoth) steps.push({ type: 'accommodations' });
   steps.push({ type: 'notes' });
   steps.push({ type: 'review' });
 
   let currentStep = 0;
+  const totalInputSteps = steps.length;
 
   function render() {
+    if (currentStep >= totalInputSteps) {
+      renderSuccess();
+      return;
+    }
     const step = steps[currentStep];
-    const total = steps.length;
 
-    const progressBars = steps.map((_, i) => {
-      const cls = i < currentStep ? 'done' : (i === currentStep ? 'active' : '');
-      return `<div class="step ${cls}"></div>`;
-    }).join('');
+    const progress = Math.min(1, currentStep / (totalInputSteps - 1));
+    const stepCount = `${currentStep + 1} of ${totalInputSteps}`;
 
-    let bodyHtml = '';
-    if (step.type === 'attendee') bodyHtml = renderAttendeeStep(state.attendees[step.index], isBoth);
-    else if (step.type === 'plusOne') bodyHtml = renderPlusOneStep(state.plusOne, isBoth);
-    else if (step.type === 'notes') bodyHtml = renderNotesStep(state);
-    else if (step.type === 'review') bodyHtml = renderReviewStep(state, isBoth, h);
+    let stepLabel, body;
+    if (step.type === 'attendee') {
+      const att = attendees[step.index];
+      stepLabel = `Step ${currentStep + 1} · ${att.firstName}`;
+      body = renderAttendee(att, isBoth);
+    } else if (step.type === 'plusOne') {
+      stepLabel = 'Plus one';
+      body = renderPlusOne(plusOne, isBoth);
+    } else if (step.type === 'accommodations') {
+      stepLabel = 'Accommodations';
+      body = renderAccommodations(state.accommodations);
+    } else if (step.type === 'notes') {
+      stepLabel = 'Household message';
+      body = renderNotes(state);
+    } else {
+      stepLabel = 'Review';
+      body = renderReview(state, isBoth, h);
+    }
 
     root.innerHTML = `
-      <div class="wizard">
-        <div class="wizard-progress">
-          ${progressBars}
-          <span class="count">Step ${currentStep + 1} of ${total}</span>
-        </div>
-        <div class="wizard-body">${bodyHtml}</div>
-        <div class="wizard-nav">
-          ${currentStep > 0
-            ? '<button type="button" class="btn btn-ghost btn-small" id="backBtn">← Back</button>'
-            : '<div></div>'}
-          <div class="spacer"></div>
-          ${step.type === 'review'
-            ? '<button type="button" class="btn" id="submitBtn">Submit RSVP</button>'
-            : '<button type="button" class="btn" id="nextBtn">Continue →</button>'}
+      <div class="modal-overlay">
+        <div class="modal-card">
+          <div class="modal-topbar">
+            <div class="modal-title">RSVP · ${escapeHtml(householdDisplayName(h))}</div>
+            <a class="modal-close" href="invitation.html" aria-label="Close">×</a>
+          </div>
+          <div class="modal-progress-wrap">
+            <div class="modal-progress">
+              <div class="modal-progress-bar" style="width: ${Math.max(2, progress * 100)}%;"></div>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="step">
+              <div class="step-header">
+                <span>${escapeHtml(stepLabel)}</span>
+                <span class="step-count">${stepCount}</span>
+              </div>
+              ${body}
+              <div class="step-nav">
+                ${currentStep > 0
+                  ? '<button type="button" class="btn btn-ghost" id="backBtn">← Back</button>'
+                  : '<span></span>'}
+                <button type="button" class="btn" id="nextBtn">
+                  ${step.type === 'review' ? 'Submit RSVP ✓' : 'Continue →'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     `;
 
     bindStep(step);
-
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.addEventListener('click', () => { currentStep--; render(); });
 
     const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) nextBtn.addEventListener('click', () => { if (validateStep(step)) { currentStep++; render(); } });
-
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
+    if (step.type === 'review') {
+      nextBtn.addEventListener('click', handleSubmit);
+    } else {
+      nextBtn.addEventListener('click', () => {
+        if (validateStep(step)) { currentStep++; render(); }
+      });
+      nextBtn.disabled = !isStepValid(step);
+    }
   }
 
-  // ---------- Step renderers ----------
+  // ---------- Renderers ----------
 
-  function renderAttendeeStep(att, isBoth) {
-    const isChild = att.role === 'child';
-    const subhead = isChild
-      ? `Let us know if ${att.firstName} will be joining.`
-      : `Will ${att.firstName} be able to make it?`;
+  function renderAttendee(att, isBoth) {
+    const attendingAny = att.attending.day1 || att.attending.day2;
+    const attendingState = attendingAny ? 'yes' : (att._answered === false ? 'no' : 'yes');
 
-    let attendingHtml;
-    if (isBoth) {
-      attendingHtml = `
-        <p class="eyebrow" style="margin-top: 1.5rem;">Which days?</p>
-        <div class="day-toggles">
-          <label class="day-toggle ${att.attending.day1 ? 'checked' : ''}" data-day="day1">
-            <input type="checkbox" ${att.attending.day1 ? 'checked' : ''}>
-            <span class="day-toggle-label">
-              <strong>Friday, October 2</strong>
-              <span>Ceremony &amp; welcome dinner</span>
-            </span>
-          </label>
-          <label class="day-toggle ${att.attending.day2 ? 'checked' : ''}" data-day="day2">
-            <input type="checkbox" ${att.attending.day2 ? 'checked' : ''}>
-            <span class="day-toggle-label">
-              <strong>Saturday, October 3</strong>
-              <span>Reception</span>
-            </span>
-          </label>
-        </div>
-      `;
-    } else {
-      attendingHtml = `
-        <div class="toggle-group" style="margin-top: 1.5rem;">
-          <button type="button" class="toggle-pill ${att.attending.day2 ? 'selected' : ''}" data-attending="yes">Yes, joining us</button>
-          <button type="button" class="toggle-pill ${!att.attending.day2 ? 'selected' : ''}" data-attending="no">Unable to attend</button>
-        </div>
+    const yesNoHtml = `
+      <div class="choice-grid-2" id="attYesNo">
+        <button type="button" class="choice radio ${attendingState === 'yes' ? 'checked' : ''}" data-attending="yes">
+          <span class="choice-mark"><span class="choice-mark-dot"></span></span>
+          <span class="choice-body">
+            <div class="choice-title">Yes, joyfully</div>
+            <div class="choice-sub">Count me in</div>
+          </span>
+        </button>
+        <button type="button" class="choice radio ${attendingState === 'no' ? 'checked' : ''}" data-attending="no">
+          <span class="choice-mark"><span class="choice-mark-dot"></span></span>
+          <span class="choice-body">
+            <div class="choice-title">Sadly no</div>
+            <div class="choice-sub">Will miss the day</div>
+          </span>
+        </button>
+      </div>
+    `;
+
+    let daysHtml = '';
+    if (isBoth && attendingState === 'yes') {
+      daysHtml = `
+        <label class="field" style="margin-top: 22px; display: block;">
+          <span class="field-label">Which days?</span>
+          <div class="choice-grid-2">
+            <button type="button" class="choice ${att.attending.day1 ? 'checked' : ''}" data-day="day1">
+              <span class="choice-mark"><span class="choice-mark-tick">✓</span></span>
+              <span class="choice-body">
+                <div class="choice-title">Friday, October 2</div>
+                <div class="choice-sub">Ceremony &amp; Dinner</div>
+              </span>
+            </button>
+            <button type="button" class="choice ${att.attending.day2 ? 'checked' : ''}" data-day="day2">
+              <span class="choice-mark"><span class="choice-mark-tick">✓</span></span>
+              <span class="choice-body">
+                <div class="choice-title">Saturday, October 3</div>
+                <div class="choice-sub">Lobster Bake &amp; Celebration</div>
+              </span>
+            </button>
+          </div>
+          <span class="field-helper">Select all that apply.</span>
+        </label>
       `;
     }
 
-    const attending = att.attending.day1 || att.attending.day2;
-    const dietaryHtml = attending ? `
-      <div class="field" style="margin-top: 1.5rem;">
-        <label for="dietary">Dietary restrictions or allergies (optional)</label>
-        <input type="text" id="dietary" value="${escapeAttr(att.dietary)}" placeholder="e.g. vegetarian, gluten-free, nut allergy">
-      </div>
+    const dietaryHtml = attendingState === 'yes' ? `
+      <label class="field" style="margin-top: 22px; display: block;">
+        <span class="field-label">Dietary restrictions or allergies (optional)</span>
+        <input type="text" id="dietary" class="field-input" value="${escapeAttr(att.dietary)}" placeholder="e.g. vegetarian, gluten-free, nut allergy">
+      </label>
     ` : '';
 
     return `
       <h2>${escapeHtml(att.name)}</h2>
-      <p class="question-sub">${subhead}</p>
-      ${attendingHtml}
+      <p class="step-question">Will ${escapeHtml(att.firstName)} be able to make it?</p>
+      ${yesNoHtml}
+      ${daysHtml}
       ${dietaryHtml}
     `;
   }
 
-  function renderPlusOneStep(po, isBoth) {
+  function renderPlusOne(po, isBoth) {
     const dayLabel = isBoth ? 'the weekend' : 'Saturday';
+    const daysHtml = (po.bringing && isBoth) ? `
+      <label class="field" style="margin-top: 22px; display: block;">
+        <span class="field-label">Which days?</span>
+        <div class="choice-grid-2">
+          <button type="button" class="choice ${po.attending.day1 ? 'checked' : ''}" data-po-day="day1">
+            <span class="choice-mark"><span class="choice-mark-tick">✓</span></span>
+            <span class="choice-body">
+              <div class="choice-title">Friday, October 2</div>
+              <div class="choice-sub">Ceremony &amp; Dinner</div>
+            </span>
+          </button>
+          <button type="button" class="choice ${po.attending.day2 ? 'checked' : ''}" data-po-day="day2">
+            <span class="choice-mark"><span class="choice-mark-tick">✓</span></span>
+            <span class="choice-body">
+              <div class="choice-title">Saturday, October 3</div>
+              <div class="choice-sub">Lobster Bake &amp; Celebration</div>
+            </span>
+          </button>
+        </div>
+      </label>
+    ` : '';
+
+    const dietaryHtml = po.bringing ? `
+      <label class="field" style="margin-top: 22px; display: block;">
+        <span class="field-label">Guest's dietary restrictions (optional)</span>
+        <input type="text" id="poDietary" class="field-input" value="${escapeAttr(po.dietary)}" placeholder="e.g. vegan">
+      </label>
+    ` : '';
+
     return `
       <h2>Bringing a guest?</h2>
-      <p class="question-sub">You're welcome to bring a plus-one to ${dayLabel}. Let us know their name so we can plan accordingly.</p>
+      <p class="step-question">You're welcome to bring a plus-one to ${dayLabel}. Let us know their name so we can plan accordingly.</p>
 
-      <div class="field" style="margin-top: 1.5rem;">
-        <label for="poName">Guest's full name</label>
-        <input type="text" id="poName" value="${escapeAttr(po.name)}" placeholder="Leave blank if you won't be bringing one">
-        <span class="help">Typing a name will check the box automatically.</span>
-      </div>
-
-      <label class="day-toggle ${po.bringing ? 'checked' : ''}" id="poBringingToggle" style="margin-top: 0.5rem;">
-        <input type="checkbox" ${po.bringing ? 'checked' : ''} id="poBringing">
-        <span class="day-toggle-label">
-          <strong>Yes, I'm bringing a guest</strong>
-        </span>
+      <label class="field" style="display: block;">
+        <span class="field-label">Guest's full name</span>
+        <input type="text" id="poName" class="field-input" value="${escapeAttr(po.name)}" placeholder="Leave blank if you won't be bringing one">
+        <span class="field-helper">Typing a name will check the box automatically.</span>
       </label>
 
-      <div id="poDietaryWrap" style="display:${po.bringing ? 'block' : 'none'}; margin-top: 1.25rem;">
-        <div class="field">
-          <label for="poDietary">Guest's dietary restrictions (optional)</label>
-          <input type="text" id="poDietary" value="${escapeAttr(po.dietary)}" placeholder="e.g. vegan">
+      <button type="button" class="choice ${po.bringing ? 'checked' : ''}" id="poBringingToggle" style="margin-top: 16px;">
+        <span class="choice-mark"><span class="choice-mark-tick">✓</span></span>
+        <span class="choice-body">
+          <div class="choice-title">Yes, I'm bringing a guest</div>
+        </span>
+      </button>
+      ${daysHtml}
+      ${dietaryHtml}
+    `;
+  }
+
+  function renderAccommodations(value) {
+    return `
+      <h2>Will you be staying with us overnight?</h2>
+      <p class="step-question tight">
+        Glamping sites at Tops'l Farm are limited, so we've assigned one per household. Your site is reserved and waiting — let us know if you'll use it, or if you'll be making other arrangements so we can offer it to another guest.
+      </p>
+      <div style="margin-bottom: 28px;">
+        <a class="btn btn-secondary btn-small" href="${WEDDING.topslLodgingUrl}" target="_blank" rel="noopener">
+          Details &amp; booking at Tops'l Farm &rarr;
+        </a>
+      </div>
+      <label class="field" style="display: block;">
+        <span class="field-label">Please check one:</span>
+        <div class="choice-grid">
+          <button type="button" class="choice radio ${value === 'onsite' ? 'checked' : ''}" data-acc="onsite">
+            <span class="choice-mark"><span class="choice-mark-dot"></span></span>
+            <span class="choice-body">
+              <div class="choice-title">Yes, we have or plan to book at Tops'l Farm</div>
+              <div class="choice-sub">We'll save your reserved site</div>
+            </span>
+          </button>
+          <button type="button" class="choice radio ${value === 'offsite' ? 'checked' : ''}" data-acc="offsite">
+            <span class="choice-mark"><span class="choice-mark-dot"></span></span>
+            <span class="choice-body">
+              <div class="choice-title">No, we will make other overnight arrangements</div>
+              <div class="choice-sub">We'll offer the site to another guest</div>
+            </span>
+          </button>
+        </div>
+      </label>
+    `;
+  }
+
+  function renderNotes(s) {
+    return `
+      <h2>Anything else?</h2>
+      <p class="step-question">A note for us, song request, accessibility need, or just hello.</p>
+      <label class="field" style="display: block;">
+        <span class="field-label">Message (optional)</span>
+        <textarea id="notes" class="field-textarea" rows="4" placeholder="We can't wait to celebrate with you both…">${escapeHtml(s.notes)}</textarea>
+      </label>
+      <label class="field" style="display: block;">
+        <span class="field-label">Best email to reach you</span>
+        <input type="email" id="contactEmail" class="field-input" value="${escapeAttr(s.contactEmail)}" placeholder="you@example.com">
+      </label>
+    `;
+  }
+
+  function renderReview(s, isBoth, h) {
+    const rows = [];
+    s.attendees.forEach(a => rows.push(reviewRow(a.name, a, isBoth)));
+    if (s.plusOne && s.plusOne.bringing && s.plusOne.name.trim()) {
+      rows.push(reviewRow(s.plusOne.name + ' (guest)', s.plusOne, isBoth));
+    }
+
+    const lodgingRow = isBoth ? `
+      <div class="review-row lodging-row">
+        <div class="meta-label">Lodging</div>
+        <div class="status">${s.accommodations === 'onsite' ? "Tops'l Farm site" : 'Off-site'}</div>
+      </div>
+    ` : '';
+
+    const noteRow = s.notes ? `
+      <div class="review-row note-row">
+        <div class="review-note-label">Note for the couple</div>
+        <div class="review-note-body">"${escapeHtml(s.notes)}"</div>
+      </div>
+    ` : '';
+
+    return `
+      <h2>Review &amp; submit</h2>
+      <p class="step-question">Make sure everything looks right.</p>
+      <div class="review-list">
+        ${rows.join('')}
+        ${lodgingRow}
+        ${noteRow}
+      </div>
+      <p class="review-footnote">
+        After submitting, you can change anything by emailing
+        <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.
+      </p>
+    `;
+  }
+
+  function reviewRow(name, person, isBoth) {
+    const attending = person.attending.day1 || person.attending.day2;
+    let summary;
+    if (!attending) {
+      summary = 'Regrets';
+    } else if (isBoth) {
+      if (person.attending.day1 && person.attending.day2) summary = 'Friday &amp; Saturday';
+      else if (person.attending.day1) summary = 'Friday only';
+      else summary = 'Saturday only';
+    } else {
+      summary = 'Attending Saturday';
+    }
+    const dietHtml = person.dietary ? `<div class="diet">Diet: ${escapeHtml(person.dietary)}</div>` : '';
+    return `
+      <div class="review-row">
+        <div>
+          <div class="person">${escapeHtml(name)}</div>
+          ${dietHtml}
+        </div>
+        <div class="status ${attending ? '' : 'not-attending'}">${summary}</div>
+      </div>
+    `;
+  }
+
+  function renderSuccess() {
+    const going = state.attendees.filter(a => a.attending.day1 || a.attending.day2).length
+      + (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2) ? 1 : 0);
+    const total = state.attendees.length + (state.plusOne && state.plusOne.bringing ? 1 : 0);
+    root.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal-card">
+          <div class="modal-topbar">
+            <div class="modal-title">RSVP · ${escapeHtml(householdDisplayName(h))}</div>
+            <a class="modal-close" href="invitation.html" aria-label="Close">×</a>
+          </div>
+          <div class="modal-body">
+            <div class="success">
+              <div class="success-check">&#10003;</div>
+              <h2>Thank you!</h2>
+              <p>Your RSVP is in. We've logged <strong>${going} of ${total}</strong> attending from your household — we can't wait.</p>
+              <p class="small">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.</p>
+              <a class="btn" href="invitation.html">Back to invitation</a>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }
 
-  function renderNotesStep(s) {
-    return `
-      <h2>Anything else?</h2>
-      <p class="question-sub">A note for us, song request, accessibility need, or just hello.</p>
-      <div class="field" style="margin-top: 1.5rem;">
-        <label for="notes">Message (optional)</label>
-        <textarea id="notes" rows="4">${escapeHtml(s.notes)}</textarea>
-      </div>
-      <div class="field" style="margin-top: 1rem;">
-        <label for="contactEmail">Best email to reach you</label>
-        <input type="email" id="contactEmail" value="${escapeAttr(s.contactEmail)}">
-      </div>
-    `;
-  }
-
-  function renderReviewStep(s, isBoth, h) {
-    const items = s.attendees.map(a => reviewItem(a.name, a, isBoth));
-    if (s.plusOne && s.plusOne.bringing && s.plusOne.name.trim()) {
-      items.push(reviewItem(s.plusOne.name + ' (guest)', s.plusOne, isBoth));
-    }
-
-    return `
-      <h2>Review &amp; submit</h2>
-      <p class="question-sub">Make sure everything looks right.</p>
-      <div class="review" style="margin-top: 1.5rem;">
-        ${items.join('')}
-      </div>
-      ${s.notes ? `<div class="review-item" style="margin-top: 1rem;"><div class="name">Note for the couple</div><div class="meta">${escapeHtml(s.notes)}</div></div>` : ''}
-      <p style="margin-top: 1.5rem; color: var(--ink-faint); font-size: 0.9rem;">
-        After submitting, you can change anything by emailing ${WEDDING.contactEmail}.
-      </p>
-    `;
-  }
-
-  function reviewItem(name, person, isBoth) {
-    const attending = person.attending.day1 || person.attending.day2;
-    const cls = attending ? 'attending' : 'not-attending';
-    let detail;
-    if (!attending) {
-      detail = 'Not attending';
-    } else if (isBoth) {
-      const days = [];
-      if (person.attending.day1) days.push('Friday');
-      if (person.attending.day2) days.push('Saturday');
-      detail = days.join(' &amp; ');
-      if (person.dietary) detail += ` &middot; ${escapeHtml(person.dietary)}`;
-    } else {
-      detail = 'Attending Saturday';
-      if (person.dietary) detail += ` &middot; ${escapeHtml(person.dietary)}`;
-    }
-    return `
-      <div class="review-item ${cls}">
-        <div class="name">${escapeHtml(name)}</div>
-        <div class="meta">${detail}</div>
-      </div>
-    `;
-  }
-
-  // ---------- Bindings ----------
+  // ---------- Step bindings ----------
 
   function bindStep(step) {
     if (step.type === 'attendee') {
-      const att = state.attendees[step.index];
+      const att = attendees[step.index];
 
-      // Day toggles (both-days households)
-      document.querySelectorAll('.day-toggle[data-day]').forEach(label => {
-        label.addEventListener('click', (e) => {
-          // Let native checkbox handle the click; we sync state after a tick.
-          setTimeout(() => {
-            const day = label.getAttribute('data-day');
-            const cb = label.querySelector('input');
-            att.attending[day] = cb.checked;
-            label.classList.toggle('checked', cb.checked);
-            // Re-render to show/hide dietary field
-            const attending = att.attending.day1 || att.attending.day2;
-            const hasDietary = document.getElementById('dietary');
-            if (attending && !hasDietary) render();
-            else if (!attending && hasDietary) render();
-          }, 0);
+      document.querySelectorAll('#attYesNo .choice').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const yes = btn.getAttribute('data-attending') === 'yes';
+          att._answered = !yes;
+          if (yes) {
+            // Default to all days they're invited to
+            att.attending.day1 = isBoth;
+            att.attending.day2 = true;
+          } else {
+            att.attending.day1 = false;
+            att.attending.day2 = false;
+          }
+          render();
         });
       });
 
-      // Yes/no pills (day-2 only households)
-      document.querySelectorAll('.toggle-pill[data-attending]').forEach(btn => {
+      document.querySelectorAll('.choice[data-day]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const yes = btn.getAttribute('data-attending') === 'yes';
-          att.attending.day2 = yes;
-          att.attending.day1 = false;
+          const day = btn.getAttribute('data-day');
+          att.attending[day] = !att.attending[day];
           render();
         });
       });
@@ -290,39 +439,60 @@
     if (step.type === 'plusOne') {
       const po = state.plusOne;
       const nameInput = document.getElementById('poName');
-      const bringingCb = document.getElementById('poBringing');
-      const bringingLabel = document.getElementById('poBringingToggle');
-      const dietaryWrap = document.getElementById('poDietaryWrap');
-      const dietaryInput = document.getElementById('poDietary');
+      const bringingToggle = document.getElementById('poBringingToggle');
 
       nameInput.addEventListener('input', e => {
         po.name = e.target.value;
         if (po.name.trim() && !po.bringing) {
           po.bringing = true;
-          bringingCb.checked = true;
-          bringingLabel.classList.add('checked');
-          dietaryWrap.style.display = 'block';
+          render();
         }
       });
 
-      bringingCb.addEventListener('change', () => {
-        po.bringing = bringingCb.checked;
-        bringingLabel.classList.toggle('checked', bringingCb.checked);
-        dietaryWrap.style.display = bringingCb.checked ? 'block' : 'none';
+      bringingToggle.addEventListener('click', () => {
+        po.bringing = !po.bringing;
+        render();
       });
 
-      if (dietaryInput) dietaryInput.addEventListener('input', e => { po.dietary = e.target.value; });
+      document.querySelectorAll('.choice[data-po-day]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const day = btn.getAttribute('data-po-day');
+          po.attending[day] = !po.attending[day];
+          render();
+        });
+      });
+
+      const dietary = document.getElementById('poDietary');
+      if (dietary) dietary.addEventListener('input', e => { po.dietary = e.target.value; });
+    }
+
+    if (step.type === 'accommodations') {
+      document.querySelectorAll('.choice[data-acc]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.accommodations = btn.getAttribute('data-acc');
+          render();
+        });
+      });
     }
 
     if (step.type === 'notes') {
       document.getElementById('notes').addEventListener('input', e => { state.notes = e.target.value; });
-      document.getElementById('contactEmail').addEventListener('input', e => { state.contactEmail = e.target.value; });
+      const emailInput = document.getElementById('contactEmail');
+      emailInput.addEventListener('input', e => {
+        state.contactEmail = e.target.value;
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) nextBtn.disabled = !isStepValid({ type: 'notes' });
+      });
     }
   }
 
+  function isStepValid(step) {
+    if (step.type === 'notes') return (state.contactEmail || '').includes('@');
+    if (step.type === 'accommodations') return state.accommodations === 'onsite' || state.accommodations === 'offsite';
+    return true;
+  }
+
   function validateStep(step) {
-    // For attendees, ensure at least the attending toggles are set (already defaulted)
-    // For +1, if bringing then name required.
     if (step.type === 'plusOne') {
       const po = state.plusOne;
       if (po.bringing && !po.name.trim()) {
@@ -330,18 +500,18 @@
         return false;
       }
     }
-    return true;
+    return isStepValid(step);
   }
 
   async function handleSubmit() {
-    const btn = document.getElementById('submitBtn');
+    const btn = document.getElementById('nextBtn');
     btn.disabled = true;
     btn.textContent = 'Submitting…';
 
-    // Clean +1: if not bringing, null it out for storage.
     const payload = {
       attendees: state.attendees,
       plusOne: (state.plusOne && state.plusOne.bringing && state.plusOne.name.trim()) ? state.plusOne : null,
+      accommodations: isBoth ? state.accommodations : null,
       notes: state.notes,
       contactEmail: state.contactEmail
     };
@@ -349,25 +519,34 @@
     try {
       const res = await submitRsvp(session.householdId, payload);
       if (res && res.ok !== false) {
-        window.location.href = 'invitation.html';
+        currentStep = totalInputSteps; // success
+        render();
       } else {
         throw new Error('Submit failed');
       }
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = 'Submit RSVP';
+      btn.textContent = 'Submit RSVP ✓';
       alert('Something went wrong. Please try again or email ' + WEDDING.contactEmail);
     }
   }
 
-  // ---------- Utilities ----------
+  // ---------- Helpers ----------
+
+  function householdDisplayName(h) {
+    const adults = h.adults;
+    if (adults.length === 1) return `${adults[0].firstName} ${adults[0].lastName}`;
+    if (adults[0].lastName === adults[1].lastName) {
+      return `${adults[0].firstName} & ${adults[1].firstName} ${adults[0].lastName}`;
+    }
+    return `${adults[0].firstName} ${adults[0].lastName} & ${adults[1].firstName} ${adults[1].lastName}`;
+  }
 
   function escapeHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
   }
-
   function escapeAttr(s) { return escapeHtml(s); }
 
   function setupDemoBanner() {
@@ -382,6 +561,5 @@
     }
   }
 
-  // Initial render
   render();
 })();

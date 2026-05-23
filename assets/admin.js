@@ -41,8 +41,8 @@
     <div class="admin-header">
       <div>
         <p class="eyebrow">Admin</p>
-        <h1 style="font-size: 2.4rem; line-height: 1.1;">RSVPs</h1>
-        <p style="color: var(--ink-soft); margin-top: 0.5rem;">${WEDDING.coupleDisplay} &middot; ${WEDDING.dayOne.location.split(',')[0]}</p>
+        <h1>RSVPs</h1>
+        <p class="subtle">${WEDDING.coupleDisplay} &middot; ${WEDDING.dayOne.location.split(',')[0]}</p>
       </div>
       <div class="admin-actions">
         <button class="btn btn-secondary btn-small" id="exportBtn">Export CSV</button>
@@ -57,21 +57,23 @@
       ${stat(stats.invited, 'Total invited')}
     </div>
 
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Household</th>
-          <th>Tier</th>
-          <th>Status</th>
-          <th>Attendees</th>
-          <th>Dietary</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${tableRows}
-      </tbody>
-    </table>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Household</th>
+            <th>Tier</th>
+            <th>Status</th>
+            <th>Attendees</th>
+            <th>Dietary</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </div>
   `;
 
   document.getElementById('exportBtn').addEventListener('click', () => exportCsv(households));
@@ -94,7 +96,7 @@ function renderRow(h) {
         <td><strong>${householdName}</strong>${childList(h.children)}</td>
         <td>${tierTag}</td>
         <td><span class="status-tag pending">Pending</span></td>
-        <td colspan="3" style="color: var(--ink-faint); font-style: italic;">No response yet</td>
+        <td colspan="3" style="color: var(--fg-3); font-style: italic;">No response yet</td>
       </tr>
     `;
   }
@@ -111,15 +113,13 @@ function renderRow(h) {
     <tr>
       <td>
         <strong>${householdName}</strong>${childList(h.children)}
-        <div style="font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.3rem;">
-          Submitted ${formatDate(r.submittedAt)}
-        </div>
+        <div class="admin-meta">Submitted ${formatDate(r.submittedAt)}</div>
       </td>
       <td>${tierTag}</td>
       <td><span class="status-tag responded">Responded</span></td>
       <td><ul class="attendee-list">${attendeeLis.join('')}</ul></td>
-      <td>${dietary || '<span style="color: var(--ink-faint);">—</span>'}</td>
-      <td>${r.notes ? escapeHtml(r.notes) : '<span style="color: var(--ink-faint);">—</span>'}</td>
+      <td>${dietary || '<span style="color: var(--fg-3);">—</span>'}</td>
+      <td>${r.notes ? escapeHtml(r.notes) : '<span style="color: var(--fg-3);">—</span>'}</td>
     </tr>
   `;
 }
@@ -132,14 +132,14 @@ function attendeeLine(a, isBoth, isPlusOne) {
     const days = [];
     if (a.attending.day1) days.push('Fri');
     if (a.attending.day2) days.push('Sat');
-    return `<li>${name} <span style="color: var(--ink-faint); font-size: 0.85rem;">(${days.join('+')})</span></li>`;
+    return `<li>${name} <span style="color: var(--fg-3); font-size: 12px;">(${days.join('+')})</span></li>`;
   }
   return `<li>${name}</li>`;
 }
 
 function childList(children) {
   if (!children || !children.length) return '';
-  return `<div style="font-size: 0.85rem; color: var(--ink-faint); margin-top: 0.2rem;">+ ${children.join(', ')}</div>`;
+  return `<div class="admin-child-list">+ ${children.join(', ')}</div>`;
 }
 
 function formatDate(iso) {

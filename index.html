@@ -3,50 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jeremy &amp; Jess &mdash; October 2026</title>
-<meta name="description" content="Jeremy and Jess are getting married at Tops'l Farm in Waldoboro, Maine.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,30..100;1,9..144,300..700,30..100&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+<title>Jess &amp; Jeremy &mdash; October 2026</title>
+<meta name="description" content="Jess and Jeremy are getting married at Tops'l Farm in Waldoboro, Maine.">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-<main class="shell">
-  <section class="hero">
-    <h1 class="hero-title couple-name">Jeremy <span class="amp">&amp;</span> Jess</h1>
-    <div class="hero-meta">
-      <span>October 2026</span>
-      <span class="divider"></span>
-      <span>Tops'l Farm</span>
-      <span>Waldoboro, Maine</span>
-    </div>
-    <p class="hero-intro">
-      We're so glad you're here. This site has everything you need:
-      details for the weekend, directions to the farm, and a place to
-      let us know if you can join us.
-    </p>
-  </section>
+<div class="home warm-backdrop">
+  <main class="home-main">
+    <div class="home-inner">
+      <h1 class="couple-wordmark">Jess<span class="amp">&nbsp;&amp;&nbsp;</span>Jeremy</h1>
 
-  <section class="lookup">
-    <p class="eyebrow">RSVP &amp; Details</p>
-    <h2>Find your invitation</h2>
-    <p>Enter your full name (first and last) or email to pull up your invitation.</p>
-
-    <form id="lookupForm">
-      <div class="field">
-        <label for="lookupQuery">Your name or email</label>
-        <input type="text" id="lookupQuery" name="query" autocomplete="off" placeholder="e.g. Rachel Brennan or rachel.brennan@example.com" required>
+      <div class="home-meta">
+        <div class="home-meta-line">October 2026</div>
+        <div class="home-meta-line">Tops'l Farm &middot; Waldoboro, Maine</div>
       </div>
-      <button type="submit" class="btn">Find my invitation</button>
-      <div id="lookupFlash" class="flash" style="display:none;"></div>
-    </form>
-  </section>
-</main>
 
-<footer class="site-footer">
-  Questions? <a href="mailto:rsvp@example.com">rsvp@example.com</a>
-</footer>
+      <p class="home-intro">
+        We're so glad you're here. This site has everything you need: details for the
+        event, directions to the farm, and a place to let us know if you can join us.
+      </p>
+
+      <div class="lookup-card">
+        <p class="eyebrow">RSVP &amp; details</p>
+        <h2>Find your invitation</h2>
+        <p class="lookup-help">Enter your full name (first and last) or email to pull up your invitation.</p>
+
+        <form id="lookupForm">
+          <label class="field">
+            <span class="field-label">Your name or email</span>
+            <input type="text" id="lookupQuery" name="query" class="field-input" autocomplete="off" placeholder="Rachel Brennan" required>
+          </label>
+          <div id="lookupFlash" class="flash" style="display:none;"></div>
+          <div class="btn-row">
+            <button type="submit" class="btn">Find my invitation &rarr;</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    Questions? Email <a href="mailto:hello@jessandjeremy.com">hello@jessandjeremy.com</a>
+  </footer>
+</div>
 
 <div class="demo-banner" id="demoBanner"></div>
 

@@ -17,6 +17,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     flash.style.display = 'none';
+    input.classList.remove('error');
 
     const query = input.value.trim();
     if (!query) return;
@@ -24,6 +25,7 @@
     const result = await findGuest(query);
 
     if (!result) {
+      input.classList.add('error');
       showFlash('error',
         "We couldn't find that name. Please try your full name as it appears on your invitation " +
         "(e.g. \"Rachel Brennan\"), or email <a href='mailto:" + WEDDING.contactEmail + "'>" + WEDDING.contactEmail + "</a>.");
@@ -31,6 +33,7 @@
     }
 
     if (result.kind === 'ambiguous') {
+      input.classList.add('error');
       showFlash('error',
         "More than one guest matches that. Please enter your full name " +
         "(first and last together), or email <a href='mailto:" + WEDDING.contactEmail + "'>" + WEDDING.contactEmail + "</a>.");

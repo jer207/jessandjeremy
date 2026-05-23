@@ -8,7 +8,7 @@
  *   3. Set the script properties (Project Settings → Script Properties):
  *        SHEET_ID            the ID from your sheet URL
  *        ADMIN_EMAIL         where RSVP alert emails go
- *        COUPLE_NAMES        e.g. "Jeremy & Jess"
+ *        COUPLE_NAMES        e.g. "Jess & Jeremy"
  *   4. Deploy → New deployment → Web app.
  *        Execute as: Me
  *        Who has access: Anyone

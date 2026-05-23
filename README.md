@@ -1,4 +1,4 @@
-# Jeremy & Jess — Wedding Site
+# Jess & Jeremy — Wedding Site
 
 Static site, hosted on GitHub Pages. RSVPs go to a Google Sheet via a tiny Apps Script backend. Until you flip the switch to remote mode, it runs in demo mode with mock data stored in your browser.
 
@@ -22,7 +22,7 @@ GitHub Pages just serves the files. When someone submits an RSVP, the browser PO
 2. Push the contents of this folder to the `main` branch.
 3. Repo Settings → Pages → Source: "Deploy from branch", Branch: `main`, Folder: `/ (root)`. Save.
 4. Wait a minute, then visit `https://<your-username>.github.io/<repo-name>` to confirm it's live.
-5. Custom domain: add a file called `CNAME` in the repo root with just your domain on one line (e.g. `jeremyandjess.com`). Then point your DNS at GitHub Pages per [GitHub's docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site). It usually means setting four `A` records on the apex and a `CNAME` on `www`.
+5. Custom domain: add a file called `CNAME` in the repo root with just your domain on one line (e.g. `jessandjeremy.com`). Then point your DNS at GitHub Pages per [GitHub's docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site). It usually means setting four `A` records on the apex and a `CNAME` on `www`.
 
 At this point the site is live but still in demo mode. Time to wire up the backend.
 
@@ -51,8 +51,8 @@ submitted_at | household_id | person_name | person_role | attending_day1 | atten
 ```
 name
 ------
-Jeremy
 Jess
+Jeremy
 ```
 
 ### 3. Deploy the Apps Script
@@ -65,7 +65,7 @@ Jess
 |---|---|
 | `SHEET_ID` | `1xFsgCZi_a8_O_7_douQFI-3U0Hd5Ot7eKmXuufOWpF8` |
 | `ADMIN_EMAIL` | Your email — where RSVP alerts go |
-| `COUPLE_NAMES` | `Jeremy & Jess` |
+| `COUPLE_NAMES` | `Jess & Jeremy` |
 
 4. **Deploy → New deployment**. Click the gear next to "Select type" and choose **Web app**.
    - **Description**: `wedding-rsvp-v1` (anything you want)
@@ -93,7 +93,7 @@ Commit, push. The site is now live with real data.
 ### 5. Test the round trip
 
 1. Open the live site. The demo banner at the bottom should be gone.
-2. Look yourself up by full name — you should land on the admin dashboard (since `Jeremy` is in the Admins tab).
+2. Look yourself up by full name — you should land on the admin dashboard (since `Jess` is in the Admins tab).
 3. Sign out, look up one of your test guests. You should see their invitation.
 4. RSVP for them. Check that the data lands in the `RSVPs` tab of the sheet, and that you got an email at `ADMIN_EMAIL`.
 5. Reload the invitation page — it should now show the "RSVP received" confirmation.
@@ -122,7 +122,7 @@ The mock guest list (`assets/data.js`) has 12 households representing every comb
 
 Type any **full name** (first and last together) or email to look up your invitation. A first name or last name alone works if it's unique across the guest list; if not, the system will prompt you to enter your full name.
 
-To reach the admin dashboard, type `Jeremy` or `Jess`.
+To reach the admin dashboard, type `Jess` or `Jeremy`.
 
 ---
 
@@ -147,7 +147,7 @@ The Apps Script URL is "public" in the sense that anyone with it can POST, but t
 wedding-site/
 ├── index.html              landing + lookup
 ├── invitation.html         personalized invitation page
-├── rsvp.html               wizard form
+├── rsvp.html               multi-step RSVP modal
 ├── admin.html              admin dashboard
 ├── assets/
 │   ├── style.css
