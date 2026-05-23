@@ -14,6 +14,14 @@
       '">Continue where you left off →</a>');
   }
 
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const submitBtnDefault = submitBtn.innerHTML;
+
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.innerHTML = loading ? 'Finding&hellip;' : submitBtnDefault;
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     flash.style.display = 'none';
@@ -22,9 +30,21 @@
     const query = input.value.trim();
     if (!query) return;
 
-    const result = await findGuest(query);
+    setLoading(true);
+
+    let result;
+    try {
+      result = await findGuest(query);
+    } catch (err) {
+      setLoading(false);
+      showFlash('error',
+        "Something went wrong reaching the server. Please try again or email " +
+        "<a href='mailto:" + WEDDING.contactEmail + "'>" + WEDDING.contactEmail + "</a>.");
+      return;
+    }
 
     if (!result) {
+      setLoading(false);
       input.classList.add('error');
       showFlash('error',
         "We couldn't find that name. Please try your full name as it appears on your invitation " +
@@ -33,6 +53,7 @@
     }
 
     if (result.kind === 'ambiguous') {
+      setLoading(false);
       input.classList.add('error');
       showFlash('error',
         "More than one guest matches that. Please enter your full name " +
@@ -40,6 +61,8 @@
       return;
     }
 
+    // Keep the button in the loading state during navigation so a slow redirect
+    // still looks intentional.
     if (result.kind === 'admin') {
       setSession({ isAdmin: true, name: result.name });
       window.location.href = 'admin.html';

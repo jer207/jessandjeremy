@@ -66,6 +66,7 @@
             <th>Status</th>
             <th>Attendees</th>
             <th>Dietary</th>
+            <th>Lodging</th>
             <th>Notes</th>
           </tr>
         </thead>
@@ -96,7 +97,7 @@ function renderRow(h) {
         <td><strong>${householdName}</strong>${childList(h.children)}</td>
         <td>${tierTag}</td>
         <td><span class="status-tag pending">Pending</span></td>
-        <td colspan="3" style="color: var(--fg-3); font-style: italic;">No response yet</td>
+        <td colspan="4" style="color: var(--fg-3); font-style: italic;">No response yet</td>
       </tr>
     `;
   }
@@ -109,6 +110,8 @@ function renderRow(h) {
     .map(a => `${a.name || h.adults[0].firstName + "'s guest"}: ${a.dietary}`)
     .join('<br>');
 
+  const lodging = formatLodging(r.accommodations);
+
   return `
     <tr>
       <td>
@@ -119,9 +122,16 @@ function renderRow(h) {
       <td><span class="status-tag responded">Responded</span></td>
       <td><ul class="attendee-list">${attendeeLis.join('')}</ul></td>
       <td>${dietary || '<span style="color: var(--fg-3);">—</span>'}</td>
+      <td>${lodging}</td>
       <td>${r.notes ? escapeHtml(r.notes) : '<span style="color: var(--fg-3);">—</span>'}</td>
     </tr>
   `;
+}
+
+function formatLodging(value) {
+  if (value === 'onsite') return "<strong>On-site</strong>";
+  if (value === 'offsite') return 'Off-site';
+  return '<span style="color: var(--fg-3);">—</span>';
 }
 
 function attendeeLine(a, isBoth, isPlusOne) {
@@ -161,7 +171,7 @@ function exportCsv(households) {
     'household_id', 'household_name', 'tier', 'status',
     'person_name', 'person_role',
     'attending_day1', 'attending_day2',
-    'dietary', 'notes', 'contact_email', 'submitted_at'
+    'dietary', 'accommodations', 'notes', 'contact_email', 'submitted_at'
   ];
   const rows = [headers];
 
@@ -176,12 +186,13 @@ function exportCsv(households) {
       ];
       if (h.plusOneAllowed) people.push({ name: '(guest)', role: 'plus_one' });
       people.forEach(p => {
-        rows.push([h.id, householdName, h.tier, 'pending', p.name, p.role, '', '', '', '', h.adults[0].email || '', '']);
+        rows.push([h.id, householdName, h.tier, 'pending', p.name, p.role, '', '', '', '', '', h.adults[0].email || '', '']);
       });
       return;
     }
 
     const r = h.rsvp;
+    const acc = r.accommodations || '';
     r.attendees.forEach(a => {
       rows.push([
         h.id, householdName, h.tier, 'responded',
@@ -189,6 +200,7 @@ function exportCsv(households) {
         a.attending.day1 ? 'yes' : 'no',
         a.attending.day2 ? 'yes' : 'no',
         a.dietary || '',
+        acc,
         r.notes || '',
         r.contactEmail || '',
         r.submittedAt
@@ -201,6 +213,7 @@ function exportCsv(households) {
         r.plusOne.attending.day1 ? 'yes' : 'no',
         r.plusOne.attending.day2 ? 'yes' : 'no',
         r.plusOne.dietary || '',
+        acc,
         '', r.contactEmail || '', r.submittedAt
       ]);
     }
