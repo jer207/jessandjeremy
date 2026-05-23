@@ -217,13 +217,14 @@
       const going = state.attendees.filter(a => a.attending.day1 || a.attending.day2).length
         + (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2) ? 1 : 0);
       const total = state.attendees.length + (state.plusOne && state.plusOne.bringing ? 1 : 0);
+      const heading = anyAttending ? 'Thank you!' : "Sorry we won't see you!";
       const message = anyAttending
-        ? `Your RSVP is in. We've logged <strong>${going} of ${total}</strong> attending from your household — we can't wait.`
+        ? `Your RSVP is in. We've logged <strong>${going} of ${total}</strong> attending from your household.`
         : `Thanks for letting us know — we'll miss you. Hope to celebrate together another time.`;
       return `
         <div class="success">
           <div class="success-check">&#10003;</div>
-          <h2>Thank you!</h2>
+          <h2>${heading}</h2>
           <p>${message}</p>
           <p class="small">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.</p>
           <button type="button" class="btn" id="successBackBtn">Back to invitation</button>

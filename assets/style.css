@@ -1468,7 +1468,7 @@ img { max-width: 100%; height: auto; }
 .success .small {
   font-size: 14px;
   color: var(--fg-3);
-  margin: 16px 0 28px;
+  margin: 16px auto 28px;
 }
 .success a { color: var(--olive-3); }
 
