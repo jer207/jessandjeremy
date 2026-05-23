@@ -179,7 +179,7 @@
 
     function renderAttendee(att, isBoth) {
       const attendingAny = att.attending.day1 || att.attending.day2;
-      const attendingState = attendingAny ? 'yes' : (att._answered === false ? 'no' : 'yes');
+      const attendingState = attendingAny ? 'yes' : (att._answered ? 'no' : 'yes');
 
       const yesNoHtml = `
         <div class="choice-grid-2" id="attYesNo">
