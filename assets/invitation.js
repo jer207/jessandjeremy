@@ -29,7 +29,7 @@
   // ---------- Render ----------
 
   root.innerHTML = renderNav(submitted) + renderHero(householdName, subhead, h) + renderItinerary(isBoth)
-    + renderDirections() + renderAccommodations(h, isBoth) + renderRegistry()
+    + renderDirections() + renderAccommodations(h) + renderRegistry()
     + renderThingsToDo() + renderFaq(isBoth) + renderFooter();
 
   bindNav();
@@ -43,7 +43,7 @@
       if (submitted) {
         openContactModal();
       } else {
-        window.location.href = 'rsvp.html';
+        window.RsvpModal.open(h, { onSuccess: () => location.reload() });
       }
     });
   });
@@ -245,11 +245,9 @@ function renderDirections() {
   `;
 }
 
-function renderAccommodations(h, isBoth) {
-  if (isBoth) {
-    const note = h.topslLodgingNote
-      ? escapeHtml(h.topslLodgingNote)
-      : "Glamping sites at Tops'l Farm are limited, so we've assigned one per household. We'll follow up with specific instructions for your household closer to the date.";
+function renderAccommodations(h) {
+  const parsed = parseLodgingNote(h.topslLodgingNote);
+  if (parsed) {
     return `
       <section id="accommodations" class="inv-section inv-section-soft">
         <div class="inv-section-wide">
@@ -260,9 +258,8 @@ function renderAccommodations(h, isBoth) {
           <div class="acc-grid">
             <div class="lodging-card featured">
               <div class="reserved-pill">${tentIcon()} Reserved for you</div>
-              <h3>On-site at Tops'l Farm</h3>
-              <p>${note}</p>
-              <p>Book directly through Tops'l to confirm the site we've reserved for your household.</p>
+              <h3>${escapeHtml(parsed.heading)}</h3>
+              <p>${escapeHtml(parsed.body).replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p>
               <a class="btn" href="${WEDDING.topslLodgingUrl}" target="_blank" rel="noopener">
                 Book on-site lodging at Tops'l Farm &rarr;
               </a>
@@ -281,7 +278,7 @@ function renderAccommodations(h, isBoth) {
     `;
   }
 
-  // Day-2-only: off-site list
+  // No on-site assignment: show off-site recommendations as full-width cards within the narrow container.
   const items = (WEDDING.accommodations || []).map(a => `
     <li class="lodging-item">
       <div class="name">${a.url && a.url !== '#'
@@ -294,7 +291,7 @@ function renderAccommodations(h, isBoth) {
 
   return `
     <section id="accommodations" class="inv-section inv-section-soft">
-      <div class="inv-section-wide">
+      <div class="inv-section-narrow">
         <div class="section-head">
           <p class="eyebrow">Where to stay</p>
           <h2>Accommodations</h2>
@@ -304,6 +301,14 @@ function renderAccommodations(h, isBoth) {
       </div>
     </section>
   `;
+}
+
+function parseLodgingNote(note) {
+  if (!note || !String(note).trim()) return null;
+  const text = String(note);
+  const idx = text.indexOf(';');
+  if (idx < 0) return { heading: 'Your reserved site', body: text.trim() };
+  return { heading: text.slice(0, idx).trim(), body: text.slice(idx + 1).trim() };
 }
 
 function renderRegistry() {
@@ -546,11 +551,11 @@ function escapeHtml(s) {
 function escapeAttr(s) { return escapeHtml(s); }
 
 function pinIcon() {
-  return '<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  return '<svg class="icn" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 }
 
 function tentIcon() {
-  return '<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 21 12 4l8.5 17z"/><path d="M12 4v17"/><path d="M8.5 21l3.5-5 3.5 5"/></svg>';
+  return '<svg class="icn" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 21 12 4l8.5 17z"/><path d="M12 4v17"/><path d="M8.5 21l3.5-5 3.5 5"/></svg>';
 }
 
 function setupDemoBanner() {

@@ -40,12 +40,14 @@ id | tier | adult1_first | adult1_last | adult1_email | adult2_first | adult2_la
 - Adult 2 columns blank for single adults.
 - `children` — semicolon-separated first names: `Sophie; Theo`.
 - `plus_one_allowed` — `1` or `0`. Only mark `1` for guests who can bring a plus-one.
-- `topsl_lodging_note` — optional. Only used on `both`-tier invitations. Personal instructions about their on-site lodging assignment (e.g. "We've reserved the farmhouse for your family"). Blank → falls back to a generic "we'll follow up" line.
+- `topsl_lodging_note` — optional. Filling this in tells the site this household has a reserved on-site site at Tops'l Farm. Format is `Heading; Body text` — everything before the first semicolon becomes the card heading (e.g. "Woodland A-Frame Cabin"), everything after is the body copy used in both the invitation's accommodations card and the RSVP form's accommodations step. Leave blank for households who aren't being assigned a site — they'll see the off-site recommendations list instead and won't be asked the on-site/off-site question during RSVP.
 
 **RSVPs** (leave empty — the script writes here)
 ```
-submitted_at | household_id | person_name | person_role | attending_day1 | attending_day2 | dietary | notes | contact_email
+submitted_at | household_id | person_name | person_role | attending_day1 | attending_day2 | dietary | accommodations | notes | contact_email
 ```
+
+- `accommodations` — set to `onsite` or `offsite` per household (same value on every row of that household). Empty for households who weren't asked the question (i.e., no `topsl_lodging_note` on their Households row).
 
 **Admins**
 ```
@@ -146,16 +148,16 @@ The Apps Script URL is "public" in the sense that anyone with it can POST, but t
 ```
 wedding-site/
 ├── index.html              landing + lookup
-├── invitation.html         personalized invitation page
-├── rsvp.html               multi-step RSVP modal
+├── invitation.html         personalized invitation page (hosts the RSVP modal)
 ├── admin.html              admin dashboard
 ├── assets/
 │   ├── style.css
+│   ├── fonts/              J9 Poem + Nunito
 │   ├── data.js             mock guest list (demo mode only — safe to leave in remote mode)
 │   ├── store.js            data layer (demo + remote, switch at top)
 │   ├── lookup.js
 │   ├── invitation.js
-│   ├── rsvp.js
+│   ├── rsvp.js             RsvpModal.open(household, opts) — loaded by invitation.html
 │   └── admin.js
 ├── apps-script/
 │   └── Code.gs             paste into Google Apps Script

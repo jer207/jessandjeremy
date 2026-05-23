@@ -23,11 +23,11 @@ const WEDDING = {
   directionsUrl: 'https://maps.app.goo.gl/bbmc8aQQsjghYuvv7',
   registryUrl: '#',
   topslLodgingUrl: 'https://www.wetravel.com/trips/jessica-jeremy-s-wedding-lodging-tops-l-farm-39955021#about-your-trip',
-  // Off-site accommodations for Day-2-only guests
+  // Off-site accommodation recommendations (shown when a household has no topslLodgingNote)
   accommodations: [
-    { name: 'Sample Inn — Damariscotta', distance: '12 min from venue', note: 'Classic Maine inn with restaurant on site.', url: '#' },
-    { name: 'Sample B&B — Waldoboro', distance: '5 min from venue', note: 'Closest to the farm; small, books up early.', url: '#' },
-    { name: 'Sample Hotel — Rockland', distance: '25 min from venue', note: 'Larger property; walkable downtown.', url: '#' }
+    { name: 'Placeholder Inn — Damariscotta', distance: '12 min from venue', note: 'Classic Maine inn with restaurant on site. Placeholder text — we will replace this with a real recommendation.', url: '#' },
+    { name: 'Placeholder B&B — Waldoboro', distance: '5 min from venue', note: 'Closest to the farm; small, books up early. Placeholder text — we will replace this with a real recommendation.', url: '#' },
+    { name: 'Placeholder Hotel — Rockland', distance: '25 min from venue', note: 'Larger property; walkable downtown. Placeholder text — we will replace this with a real recommendation.', url: '#' }
   ],
   // Things to do in Midcoast Maine — first item opens by default on the page
   thingsToDo: [
@@ -95,7 +95,7 @@ const HOUSEHOLDS = [
     ],
     children: ['Sophie', 'Theo'],
     plusOneAllowed: false,
-    topslLodgingNote: "We've reserved the farmhouse for your family — please book the 'Farmhouse — Carroll' option."
+    topslLodgingNote: "Woodland A-Frame Cabin; Glamping sites at Tops'l Farm are limited, so we've assigned one per household. Yours is a rustic A-frame cabin tucked in the woods — fresh linens, a private fire pit for s'mores, and a sky full of stars.\n\nSelect \"Woodland A-Frame Cabin\" to book directly through Tops'l."
   },
   {
     id: 'pratt',

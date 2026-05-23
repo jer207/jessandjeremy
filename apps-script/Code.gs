@@ -104,7 +104,7 @@ function loadRsvps() {
   const map = {};
   rows.forEach(r => {
     const id = String(r.household_id);
-    if (!map[id]) map[id] = { attendees: [], plusOne: null, notes: '', contactEmail: '', submittedAt: '' };
+    if (!map[id]) map[id] = { attendees: [], plusOne: null, accommodations: '', notes: '', contactEmail: '', submittedAt: '' };
     const person = {
       name: r.person_name,
       role: r.person_role,
@@ -113,6 +113,7 @@ function loadRsvps() {
     };
     if (r.person_role === 'plus_one') map[id].plusOne = person;
     else map[id].attendees.push(person);
+    if (r.accommodations) map[id].accommodations = String(r.accommodations);
     if (r.notes) map[id].notes = r.notes;
     if (r.contact_email) map[id].contactEmail = r.contact_email;
     if (r.submitted_at) map[id].submittedAt = new Date(r.submitted_at).toISOString();
@@ -183,6 +184,7 @@ function submitRsvp(householdId, rsvpData) {
   const cap = (s, n) => String(s == null ? '' : s).slice(0, n);
   const notes = cap(rsvpData.notes, 1000);
   const contactEmail = cap(rsvpData.contactEmail, 200);
+  const accommodations = cap(rsvpData.accommodations || '', 20);
 
   // Acquire a lock so two simultaneous submissions can't interleave
   const lock = LockService.getScriptLock();
@@ -201,6 +203,7 @@ function submitRsvp(householdId, rsvpData) {
     }
 
     // Append new rows. Validate each attendee minimally.
+    // Column order: submitted_at | household_id | person_name | person_role | attending_day1 | attending_day2 | dietary | accommodations | notes | contact_email
     rsvpData.attendees.forEach(a => {
       if (!a || !a.name) return;
       sh.appendRow([
@@ -208,6 +211,7 @@ function submitRsvp(householdId, rsvpData) {
         a.attending && a.attending.day1 ? 'yes' : 'no',
         a.attending && a.attending.day2 ? 'yes' : 'no',
         cap(a.dietary, 500),
+        accommodations,
         notes, contactEmail
       ]);
     });
@@ -218,6 +222,7 @@ function submitRsvp(householdId, rsvpData) {
         po.attending && po.attending.day1 ? 'yes' : 'no',
         po.attending && po.attending.day2 ? 'yes' : 'no',
         cap(po.dietary, 500),
+        accommodations,
         notes, contactEmail
       ]);
     }
@@ -269,11 +274,15 @@ function sendAlert(h, rsvp) {
   }
 
   const subject = `RSVP from ${householdName}`;
+  const lodgingLine = rsvp.accommodations
+    ? 'Lodging: ' + (rsvp.accommodations === 'onsite' ? "On-site at Tops'l Farm" : 'Off-site')
+    : '';
   const body = [
     `${householdName} just responded:`,
     '',
     ...lines,
     '',
+    lodgingLine,
     rsvp.notes ? 'Note: ' + rsvp.notes : '',
     '',
     `Contact: ${rsvp.contactEmail || '(none)'}`
