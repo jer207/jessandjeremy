@@ -18,6 +18,12 @@ const WEDDING = {
     location: "Tops'l Farm, Waldoboro, Maine",
     details: 'Cocktails at 5:00 p.m., lobster bake at 6:30, dancing with live band and DJ. Casual, larger group.'
   },
+  dayThree: {
+    label: 'Sunday, October 4, 2026',
+    title: 'Lazy Morning & Checkout',
+    location: "Tops'l Farm, Waldoboro, Maine",
+    details: "Sleep in a little, checkout by noon, and maybe join us at Moody's Diner nearby for strawberry pie or brunch."
+  },
   contactEmail: 'hello@jessandjeremy.com',
   rsvpDeadline: 'August 15, 2026',
   directionsUrl: 'https://maps.app.goo.gl/bbmc8aQQsjghYuvv7',
@@ -25,9 +31,54 @@ const WEDDING = {
   topslLodgingUrl: 'https://www.wetravel.com/trips/jessica-jeremy-s-wedding-lodging-tops-l-farm-39955021#about-your-trip',
   // Off-site accommodation recommendations (shown when a household has no topslLodgingNote)
   accommodations: [
-    { name: 'Placeholder Inn — Damariscotta', distance: '12 min from venue', note: 'Classic Maine inn with restaurant on site. Placeholder text — we will replace this with a real recommendation.', url: '#' },
-    { name: 'Placeholder B&B — Waldoboro', distance: '5 min from venue', note: 'Closest to the farm; small, books up early. Placeholder text — we will replace this with a real recommendation.', url: '#' },
-    { name: 'Placeholder Hotel — Rockland', distance: '25 min from venue', note: 'Larger property; walkable downtown. Placeholder text — we will replace this with a real recommendation.', url: '#' }
+    {
+      name: 'Rockland Harbor Hotel',
+      url: 'https://www.rocklandharborhotel.com/',
+      distance: '30 min from venue',
+      note: 'Reliable harbor-view hotel with free breakfast and easy parking. Nothing flashy, fair price for the area.'
+    },
+    {
+      name: '250 Main',
+      url: 'https://250mainhotel.com/',
+      distance: '30 min from venue',
+      note: 'Boutique art hotel with a rooftop terrace overlooking Rockland harbor. Higher-end, but a memorable spot if you want to make a night of it.'
+    },
+    {
+      name: 'The Samoset Resort',
+      url: 'https://www.opalcollection.com/samoset/',
+      distance: '35 min from venue',
+      note: "The full Maine resort experience: oceanfront rooms, championship golf, full spa, 230 acres of grounds. Easily the priciest option on this list — worth it if you're planning to turn the wedding into a long weekend."
+    },
+    {
+      name: 'Camden Riverhouse',
+      url: 'https://www.camdenmaine.com/',
+      distance: '30 min from venue',
+      note: 'Easy walk into downtown Camden, indoor pool, and a continental breakfast. Probably the best value if you want to stay in Camden.'
+    },
+    {
+      name: 'Hotel 16 Bay View',
+      url: 'https://16bayview.com/',
+      distance: '30 min from venue',
+      note: 'Sleek 21-room boutique in downtown Camden with one of the best rooftop bars on the coast. On the upscale side.'
+    },
+    {
+      name: 'Lord Camden Inn',
+      url: 'https://lordcamdeninn.com/',
+      distance: '30 min from venue',
+      note: 'Historic inn smack in the middle of Camden village, harbor views from many rooms, free breakfast. Solid mid-to-upper-range pick.'
+    },
+    {
+      name: 'Hampton Inn & Suites Rockland',
+      url: 'https://www.hilton.com/en/hotels/rkdmehx-hampton-suites-rockland/',
+      distance: '25 min from venue',
+      note: "You know what you're getting: indoor pool, free hot breakfast, free parking. Easily the best value if you want a familiar chain (and Hilton points)."
+    },
+    {
+      name: 'Harborline Hotel',
+      url: 'https://harborlinehotel.com/',
+      distance: '30 min from venue',
+      note: 'Recently renovated rooms in downtown Rockland, many with harbor views. Likely the cheapest option on this list at typical rates.'
+    }
   ],
   // Things to do in Midcoast Maine — first item opens by default on the page
   thingsToDo: [

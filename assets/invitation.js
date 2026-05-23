@@ -23,8 +23,8 @@
   const submitted = !!h.rsvp;
 
   const subhead = isBoth
-    ? "You're invited to join us for the entire weekend."
-    : "You're invited to celebrate with us on Saturday.";
+    ? "You're invited to join us for the entire weekend, Oct. 2nd to Oct. 4th, 2026"
+    : "You're invited to celebrate with us on Saturday, Oct. 3, 2026";
 
   // ---------- Render ----------
 
@@ -178,27 +178,11 @@ function renderConfirmedCard(h) {
 function renderItinerary(isBoth) {
   const days = [];
   if (isBoth) {
-    days.push({
-      anchor: 'itinerary-day-1',
-      label: 'Day One',
-      data: WEDDING.dayOne,
-      accent: 'olive'
-    });
-  }
-  days.push({
-    anchor: 'itinerary-day-1',
-    label: isBoth ? 'Day Two' : 'Saturday',
-    data: WEDDING.dayTwo,
-    accent: 'coral',
-    anchorDayTwo: isBoth ? 'itinerary-day-2' : 'itinerary-day-1'
-  });
-
-  // Re-key anchors so day 1 always has itinerary-day-1
-  if (isBoth) {
-    days[0].anchor = 'itinerary-day-1';
-    days[1].anchor = 'itinerary-day-2';
+    days.push({ anchor: 'itinerary-day-1', label: 'Day One',   data: WEDDING.dayOne,   accent: 'olive' });
+    days.push({ anchor: 'itinerary-day-2', label: 'Day Two',   data: WEDDING.dayTwo,   accent: 'coral' });
+    days.push({ anchor: 'itinerary-day-3', label: 'Day Three', data: WEDDING.dayThree, accent: 'olive' });
   } else {
-    days[0].anchor = 'itinerary-day-1';
+    days.push({ anchor: 'itinerary-day-1', label: 'Saturday',  data: WEDDING.dayTwo,   accent: 'coral' });
   }
 
   const cardsHtml = days.map(d => {
@@ -278,26 +262,31 @@ function renderAccommodations(h) {
     `;
   }
 
-  // No on-site assignment: show off-site recommendations as full-width cards within the narrow container.
-  const items = (WEDDING.accommodations || []).map(a => `
-    <li class="lodging-item">
-      <div class="name">${a.url && a.url !== '#'
-        ? `<a href="${a.url}" target="_blank" rel="noopener">${escapeHtml(a.name)}</a>`
-        : escapeHtml(a.name)}</div>
-      ${a.distance ? `<div class="distance">${escapeHtml(a.distance)}</div>` : ''}
-      ${a.note ? `<p class="note">${escapeHtml(a.note)}</p>` : ''}
-    </li>
-  `).join('');
+  // No on-site assignment: show off-site recommendations as a clickable card grid.
+  const items = (WEDDING.accommodations || []).map(a => {
+    const hasUrl = a.url && a.url !== '#';
+    const open = hasUrl ? `<a class="lodging-card-link" href="${a.url}" target="_blank" rel="noopener">` : '<div class="lodging-card-link">';
+    const close = hasUrl ? '</a>' : '</div>';
+    return `
+      <li>
+        ${open}
+          <div class="name">${escapeHtml(a.name)}</div>
+          ${a.distance ? `<div class="distance">${escapeHtml(a.distance)}</div>` : ''}
+          ${a.note ? `<p class="note">${escapeHtml(a.note)}</p>` : ''}
+        ${close}
+      </li>
+    `;
+  }).join('');
 
   return `
     <section id="accommodations" class="inv-section inv-section-soft">
-      <div class="inv-section-narrow">
+      <div class="inv-section-wide">
         <div class="section-head">
           <p class="eyebrow">Where to stay</p>
           <h2>Accommodations</h2>
           <p class="intro">A few places we recommend in the area. Book early — Midcoast Maine fills up in October.</p>
         </div>
-        <ul class="lodging-list">${items}</ul>
+        <ul class="lodging-list-grid">${items}</ul>
       </div>
     </section>
   `;
@@ -485,7 +474,7 @@ function bindAccordions() {
 }
 
 function setupScrollSpy() {
-  const ids = ['itinerary-day-1', 'itinerary-day-2', 'directions', 'accommodations', 'registry', 'things-to-do', 'faq'];
+  const ids = ['itinerary-day-1', 'itinerary-day-2', 'itinerary-day-3', 'directions', 'accommodations', 'registry', 'things-to-do', 'faq'];
   const links = Array.from(document.querySelectorAll('.sticky-nav-links button'));
   if (!('IntersectionObserver' in window)) return;
 
