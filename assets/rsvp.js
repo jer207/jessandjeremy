@@ -56,6 +56,8 @@
 
     let currentStep = 0;
     let submitted = false;
+    let shellMounted = false;
+    const visited = [];
     const prevBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
@@ -69,34 +71,37 @@
       if (opts.onSuccess) opts.onSuccess();
     }
 
-    function render() {
-      if (currentStep >= totalInputSteps) {
-        renderSuccess();
-        return;
-      }
+    function adultEntries() {
+      return state.attendees.filter(a => a.role === 'adult');
+    }
+
+    function allAdultsRegret() {
+      const adults = adultEntries();
+      return adults.length > 0 && adults.every(a => a._answered === true);
+    }
+
+    function isLastAdultStep(step) {
+      return step.type === 'attendee' && attendees[step.index].role === 'adult'
+        && step.index === household.adults.length - 1;
+    }
+
+    function computeNextStep() {
       const step = steps[currentStep];
-      const progress = Math.min(1, currentStep / (totalInputSteps - 1));
-      const stepCount = `${currentStep + 1} of ${totalInputSteps}`;
-
-      let stepLabel, body;
-      if (step.type === 'attendee') {
-        const att = attendees[step.index];
-        stepLabel = `Step ${currentStep + 1} · ${att.firstName}`;
-        body = renderAttendee(att, isBoth);
-      } else if (step.type === 'plusOne') {
-        stepLabel = 'Plus one';
-        body = renderPlusOne(plusOne, isBoth);
-      } else if (step.type === 'accommodations') {
-        stepLabel = 'Accommodations';
-        body = renderAccommodations(state.accommodations, lodging);
-      } else if (step.type === 'notes') {
-        stepLabel = 'Household message';
-        body = renderNotes(state);
-      } else {
-        stepLabel = 'Review';
-        body = renderReview(state, isBoth, household, hasLodging);
+      if (isLastAdultStep(step) && allAdultsRegret()) {
+        // Mark all children as not attending; jump to review.
+        state.attendees.forEach(a => {
+          if (a.role === 'child') {
+            a.attending = { day1: false, day2: false };
+            a._answered = true;
+          }
+        });
+        return steps.findIndex(s => s.type === 'review');
       }
+      return currentStep + 1;
+    }
 
+    function ensureShell() {
+      if (shellMounted) return;
       modalRoot.innerHTML = `
         <div class="modal-overlay">
           <div class="modal-card">
@@ -104,75 +109,126 @@
               <div class="modal-title">RSVP · ${escapeHtml(displayName(household))}</div>
               <button type="button" class="modal-close" aria-label="Close" id="rsvpCloseBtn">×</button>
             </div>
-            <div class="modal-progress-wrap">
+            <div class="modal-progress-wrap" id="rsvpProgressWrap">
               <div class="modal-progress">
-                <div class="modal-progress-bar" style="width: ${Math.max(2, progress * 100)}%;"></div>
+                <div class="modal-progress-bar" id="rsvpProgressBar" style="width: 2%;"></div>
               </div>
             </div>
-            <div class="modal-body">
-              <div class="step">
-                <div class="step-header">
-                  <span>${escapeHtml(stepLabel)}</span>
-                  <span class="step-count">${stepCount}</span>
-                </div>
-                ${body}
-                <div class="step-nav">
-                  ${currentStep > 0
-                    ? '<button type="button" class="btn btn-ghost" id="backBtn">← Back</button>'
-                    : '<span></span>'}
-                  <button type="button" class="btn" id="nextBtn">
-                    ${step.type === 'review' ? 'Submit RSVP ✓' : 'Continue →'}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <div class="modal-body" id="rsvpBody"></div>
           </div>
         </div>
       `;
+      document.getElementById('rsvpCloseBtn').addEventListener('click', () => close());
+      shellMounted = true;
+    }
 
-      document.getElementById('rsvpCloseBtn').addEventListener('click', close);
+    function render() {
+      ensureShell();
+      const body = document.getElementById('rsvpBody');
+      const progressWrap = document.getElementById('rsvpProgressWrap');
+
+      if (currentStep >= totalInputSteps) {
+        progressWrap.style.display = 'none';
+        body.innerHTML = buildSuccessBody();
+        // After submit, the close × also dismisses to invitation
+        document.getElementById('rsvpCloseBtn').onclick = finishWithSuccess;
+        document.getElementById('successBackBtn').addEventListener('click', finishWithSuccess);
+        return;
+      }
+
+      progressWrap.style.display = '';
+      const progress = Math.min(1, currentStep / Math.max(1, totalInputSteps - 1));
+      document.getElementById('rsvpProgressBar').style.width = Math.max(2, progress * 100) + '%';
+
+      const step = steps[currentStep];
+      body.innerHTML = buildStepBody(step);
 
       bindStep(step);
 
       const backBtn = document.getElementById('backBtn');
-      if (backBtn) backBtn.addEventListener('click', () => { currentStep--; render(); });
+      if (backBtn) backBtn.addEventListener('click', goBack);
 
       const nextBtn = document.getElementById('nextBtn');
       if (step.type === 'review') {
         nextBtn.addEventListener('click', handleSubmit);
       } else {
         nextBtn.addEventListener('click', () => {
-          if (validateStep(step)) { currentStep++; render(); }
+          if (validateStep(step)) goNext();
         });
         nextBtn.disabled = !isStepValid(step);
       }
     }
 
-    function renderSuccess() {
-      const going = state.attendees.filter(a => a.attending.day1 || a.attending.day2).length
-        + (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2) ? 1 : 0);
-      const total = state.attendees.length + (state.plusOne && state.plusOne.bringing ? 1 : 0);
-      modalRoot.innerHTML = `
-        <div class="modal-overlay">
-          <div class="modal-card">
-            <div class="modal-topbar">
-              <div class="modal-title">RSVP · ${escapeHtml(displayName(household))}</div>
-              <button type="button" class="modal-close" aria-label="Close" id="rsvpCloseBtn">×</button>
-            </div>
-            <div class="modal-body">
-              <div class="success">
-                <div class="success-check">&#10003;</div>
-                <h2>Thank you!</h2>
-                <p>Your RSVP is in. We've logged <strong>${going} of ${total}</strong> attending from your household — we can't wait.</p>
-                <p class="small">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.</p>
-                <button type="button" class="btn" id="successBackBtn">Back to invitation</button>
-              </div>
-            </div>
+    function goNext() {
+      const next = computeNextStep();
+      visited.push(currentStep);
+      currentStep = next;
+      render();
+    }
+
+    function goBack() {
+      if (visited.length === 0) return;
+      currentStep = visited.pop();
+      render();
+    }
+
+    function buildStepBody(step) {
+      let stepLabel, contents;
+      if (step.type === 'attendee') {
+        const att = attendees[step.index];
+        stepLabel = `Step ${currentStep + 1} · ${att.firstName}`;
+        contents = renderAttendee(att, isBoth);
+      } else if (step.type === 'plusOne') {
+        stepLabel = 'Plus one';
+        contents = renderPlusOne(plusOne, isBoth);
+      } else if (step.type === 'accommodations') {
+        stepLabel = 'Accommodations';
+        contents = renderAccommodations(state.accommodations, lodging);
+      } else if (step.type === 'notes') {
+        stepLabel = 'Household message';
+        contents = renderNotes(state);
+      } else {
+        stepLabel = 'Review';
+        contents = renderReview(state, isBoth, household, hasLodging);
+      }
+      const stepCount = `${currentStep + 1} of ${totalInputSteps}`;
+      return `
+        <div class="step">
+          <div class="step-header">
+            <span>${escapeHtml(stepLabel)}</span>
+            <span class="step-count">${stepCount}</span>
+          </div>
+          ${contents}
+          <div class="step-nav">
+            ${visited.length > 0
+              ? '<button type="button" class="btn btn-ghost" id="backBtn">← Back</button>'
+              : '<span></span>'}
+            <button type="button" class="btn" id="nextBtn">
+              ${step.type === 'review' ? 'Submit RSVP ✓' : 'Continue →'}
+            </button>
           </div>
         </div>
       `;
-      document.getElementById('rsvpCloseBtn').addEventListener('click', finishWithSuccess);
-      document.getElementById('successBackBtn').addEventListener('click', finishWithSuccess);
+    }
+
+    function buildSuccessBody() {
+      const anyAttending = state.attendees.some(a => a.attending.day1 || a.attending.day2)
+        || (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2));
+      const going = state.attendees.filter(a => a.attending.day1 || a.attending.day2).length
+        + (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2) ? 1 : 0);
+      const total = state.attendees.length + (state.plusOne && state.plusOne.bringing ? 1 : 0);
+      const message = anyAttending
+        ? `Your RSVP is in. We've logged <strong>${going} of ${total}</strong> attending from your household — we can't wait.`
+        : `Thanks for letting us know — we'll miss you. Hope to celebrate together another time.`;
+      return `
+        <div class="success">
+          <div class="success-check">&#10003;</div>
+          <h2>Thank you!</h2>
+          <p>${message}</p>
+          <p class="small">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.</p>
+          <button type="button" class="btn" id="successBackBtn">Back to invitation</button>
+        </div>
+      `;
     }
 
     // ---------- Renderers ----------
@@ -348,7 +404,10 @@
         rows.push(reviewRow(s.plusOne.name + ' (guest)', s.plusOne, isBoth));
       }
 
-      const lodgingRow = hasLodging ? `
+      const anyAttending = s.attendees.some(a => a.attending.day1 || a.attending.day2)
+        || (s.plusOne && s.plusOne.bringing && (s.plusOne.attending.day1 || s.plusOne.attending.day2));
+      const showLodging = hasLodging && anyAttending;
+      const lodgingRow = showLodging ? `
         <div class="review-row lodging-row">
           <div class="meta-label">Lodging</div>
           <div class="status">${s.accommodations === 'onsite' ? "Tops'l Farm site" : 'Off-site'}</div>
@@ -508,10 +567,12 @@
       btn.disabled = true;
       btn.textContent = 'Submitting…';
 
+      const anyAttending = state.attendees.some(a => a.attending.day1 || a.attending.day2)
+        || (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2));
       const payload = {
         attendees: state.attendees,
         plusOne: (state.plusOne && state.plusOne.bringing && state.plusOne.name.trim()) ? state.plusOne : null,
-        accommodations: hasLodging ? state.accommodations : null,
+        accommodations: (hasLodging && anyAttending) ? state.accommodations : null,
         notes: state.notes,
         contactEmail: state.contactEmail
       };
