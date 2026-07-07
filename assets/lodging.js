@@ -85,7 +85,7 @@ function renderMain(h, L) {
           </section>
           <div class="lodge-rule"></div>
           <section class="lodge-sec">
-            <p class="lodge-incl-eyebrow">Specifications &amp; included amenities</p>
+            <h2>Specifications &amp; included amenities</h2>
             <ul class="lodge-incl">${inclusions}</ul>
           </section>
         </div>
