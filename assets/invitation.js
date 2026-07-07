@@ -149,7 +149,7 @@ function renderHero(householdName, subhead, h) {
   const submitted = !!h.rsvp;
   let hero;
   if (submitted) {
-    hero = renderConfirmedCard(h);
+    hero = renderConfirmedCard(h) + renderLodgingNudge(h);
   } else {
     hero = `
       <button type="button" class="btn" data-action="open-rsvp">RSVP &rarr;</button>
@@ -172,11 +172,6 @@ function renderHero(householdName, subhead, h) {
 function renderConfirmedCard(h) {
   const summary = attendingSummary(h);
   const submittedDate = formatLongDate(h.rsvp.submittedAt);
-  // Assigned but not yet paid: nudge them down to the accommodations CTA.
-  const showLockIn = h.tier === 'both' && h.lodging && !h.lodgingPaid;
-  const lockIn = showLockIn
-    ? `<a class="btn btn-small confirmed-lockin" href="#accommodations" data-action="scroll-accommodations">Lock in your Accommodations &rarr;</a>`
-    : '';
   return `
     <div class="confirmed-card">
       <div class="confirmed-card-header">
@@ -185,8 +180,18 @@ function renderConfirmedCard(h) {
       </div>
       <p>Thank you — we have your response logged on ${escapeHtml(submittedDate)}.</p>
       <p class="attending-summary">${escapeHtml(summary)}</p>
-      ${lockIn}
       <p class="footnote">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a> and we'll update it.</p>
+    </div>
+  `;
+}
+
+// Shown below the confirmed card for assigned-but-unpaid both-day households.
+function renderLodgingNudge(h) {
+  if (!(h.tier === 'both' && h.lodging && !h.lodgingPaid)) return '';
+  return `
+    <div class="hero-lodging-nudge">
+      <p class="hero-lodging-heading">We've reserved accommodations for you…</p>
+      <a class="btn btn-small" href="#accommodations" data-action="scroll-accommodations">Review &amp; Confirm Lodging &rarr;</a>
     </div>
   `;
 }

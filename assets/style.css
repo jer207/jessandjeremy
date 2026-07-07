@@ -729,7 +729,15 @@ img { max-width: 100%; height: auto; }
   margin: 0;
 }
 .confirmed-card .footnote a { color: var(--olive-3); }
-.confirmed-card .confirmed-lockin { margin: 4px 0 16px; }
+.hero-lodging-nudge { margin-top: 28px; }
+.hero-lodging-heading {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 28px);
+  color: var(--olive);
+  line-height: 1.2;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
 
 /* Section base */
 .inv-section {
