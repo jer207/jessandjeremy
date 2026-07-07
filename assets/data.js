@@ -24,12 +24,21 @@ const WEDDING = {
     location: "Tops'l Farm, Waldoboro, Maine",
     details: "Sleep in a little, checkout by noon, and maybe join us at Moody's Diner nearby for strawberry pie or brunch."
   },
+  // Footnote shown above the itinerary for everyone.
+  itineraryNote: "*Exact timing may change — we'll update this website with the latest closer to the big day.",
+  // Both-day guests see Saturday as three stacked blocks inside one card.
+  saturdaySections: [
+    { title: 'Light Breakfast', body: "We've arranged for some locally baked bagels and delicious condiments to fuel you for the rest of the day." },
+    { title: 'Explore Midcoast Maine', body: "While we're busy setting things up, take the opportunity to either rest, relax, and hang out on the beautiful property, or hit the road and check out some of the local attractions — we've listed some fun ideas below." },
+    { title: 'Lobster Bake & Celebration', body: 'Cocktails at 5:00 p.m., lobster bake at 6:30, dancing with live band and DJ. Casual, larger group.' }
+  ],
+  // Day-2-only guests see this copy in their single Saturday card.
+  dayTwoDay2Details: "We're keeping the ceremony itself small and quiet, just us and a few others, the day before. We hope you'll join us here for the most important part: the party. Cocktails at 5:00 p.m., Lobster Bake at 6:30, dancing with live band and DJ.",
   contactEmail: 'hello@jessandjeremy.com',
   rsvpDeadline: 'August 15, 2026',
   directionsUrl: 'https://maps.app.goo.gl/bbmc8aQQsjghYuvv7',
-  registryUrl: '#',
-  topslLodgingUrl: 'https://www.wetravel.com/trips/jessica-jeremy-s-wedding-lodging-tops-l-farm-39955021#about-your-trip',
-  // Off-site accommodation recommendations (shown when a household has no topslLodgingNote)
+  registryUrl: 'https://www.myregistry.com/wedding-registry/jess-sokolow-and-jeremy-hammond-portland-maine/5453639/giftlist',
+  // Off-site accommodation recommendations (shown when a household has no lodge_key assignment)
   accommodations: [
     {
       name: 'Rockland Harbor Hotel',
@@ -138,6 +147,7 @@ const ADMINS = ['Jess', 'Jeremy'];
 
 const HOUSEHOLDS = [
   {
+    // both + assigned cabin + UNPAID  →  invitation CTA, lodging page "Your Cabin"
     id: 'carroll',
     tier: 'both',
     adults: [
@@ -146,9 +156,11 @@ const HOUSEHOLDS = [
     ],
     children: ['Sophie', 'Theo'],
     plusOneAllowed: false,
-    topslLodgingNote: "Woodland A-Frame Cabin; Glamping sites at Tops'l Farm are limited, so we've assigned one per household. Yours is a rustic A-frame cabin tucked in the woods — fresh linens, a private fire pit for s'mores, and a sky full of stars.\n\nSelect \"Woodland A-Frame Cabin\" to book directly through Tops'l."
+    lodgeKey: 'top-a-frame',
+    lodgingPaid: false
   },
   {
+    // both + assigned room + PAID  →  invitation confirmed card
     id: 'pratt',
     tier: 'both',
     adults: [
@@ -156,25 +168,33 @@ const HOUSEHOLDS = [
       { firstName: 'James', lastName: 'Pratt', email: 'james.pratt@example.com' }
     ],
     children: [],
-    plusOneAllowed: false
+    plusOneAllowed: false,
+    lodgeKey: 'longview1',
+    lodgingPaid: true
   },
   {
+    // both + NO lodging (the Betsy & Dustin case)  →  off-site list
     id: 'brennan',
     tier: 'both',
     adults: [
       { firstName: 'Rachel', lastName: 'Brennan', email: 'rachel.brennan@example.com' }
     ],
     children: [],
-    plusOneAllowed: true
+    plusOneAllowed: true,
+    lodgeKey: '',
+    lodgingPaid: false
   },
   {
+    // both + assigned room + UNPAID  →  invitation CTA, lodging page "Your Room"
     id: 'okonkwo',
     tier: 'both',
     adults: [
       { firstName: 'David', lastName: 'Okonkwo', email: 'david.okonkwo@example.com' }
     ],
     children: [],
-    plusOneAllowed: false
+    plusOneAllowed: false,
+    lodgeKey: 'top-cider-bed1',
+    lodgingPaid: false
   },
   {
     id: 'nguyen',
@@ -253,3 +273,66 @@ const HOUSEHOLDS = [
     plusOneAllowed: false
   }
 ];
+
+// Mock lodging catalog for demo mode — mirrors the Google Sheet "Room Specs" tab,
+// keyed by lodge_key. In remote mode the Apps Script joins this in server-side and
+// this constant is ignored. Images resolve to assets/lodging-images/{imageKey}1..3.webp.
+const ROOM_SPECS = {
+  'top-a-frame': {
+    lodgeKey: 'top-a-frame',
+    imageKey: 'aframe',
+    venue: "Tops'l Farm Campground",
+    room: 'Woodland A Frame Cabin',
+    price: 498,
+    checkIn: '3pm, Friday, October 2nd',
+    checkOut: 'Noon, Sunday, October 4th',
+    venueTeaser: "Glamping sites at Tops'l Farm are limited, so we've assigned one per household. Yours is a rustic A-frame cabin tucked in the woods — fresh linens, a private fire pit for s'mores, and a sky full of stars.",
+    venueDescription: "Since 1936 Tops'l Farm has been a place where the most important connections are made, nurtured and celebrated; taking time out of the ordinary hustle and bustle to slow down, enjoy the unique flavor of mid-coast Maine, and to relax. The owners have taken great care to honor this heritage by creating new inspired spaces for the ultimate enjoyment of their farm, and we look forward to sharing it with you.",
+    roomDescription: 'Cue instant relaxation. Step inside the fully furnished, rustic A-Frame cabins and allow yourself a few days to take things at a slower pace. The thoughtfully simplistic cabins have large windows into the woods, fresh linens, and plenty of creature comforts while you unplug. Each site includes two outdoor chairs and a private fire pit for your s\'mores sesh. The communal bathhouse is just steps away.',
+    inclusions: [
+      '2 twin beds per cabin (2 adults max)',
+      '176 sq. ft. per cabin',
+      'Bedding & linens, including towels',
+      'Organic shampoo, conditioner & soap',
+      'Battery-powered lantern',
+      'Private fire pit, outdoor seating, board games',
+      'Charcoal grills, electric kettle, potable water',
+      'Communal use of all property amenities'
+    ]
+  },
+  'longview1': {
+    lodgeKey: 'longview1',
+    imageKey: 'longview',
+    venue: 'Long View Farm',
+    room: 'Bedroom 1',
+    price: 498,
+    checkIn: '3pm, Friday, October 2nd',
+    checkOut: 'Noon, Sunday, October 4th',
+    venueTeaser: "To accommodate as many friends and relatives as possible, we've reserved and allocated rooms for guests. Your assigned room is at Long View Farm.",
+    venueDescription: 'A beautifully sited farmhouse a short drive from the celebration, with open common spaces, a full kitchen, and long views over the fields. A relaxed home base for the weekend among family and friends.',
+    roomDescription: 'A comfortable bedroom on the main level with a cozy, homey feel — fresh linens and towels provided.',
+    inclusions: [
+      'Bedding & linens, including towels',
+      'Organic shampoo, conditioner & soap',
+      'Full use of the shared kitchen & common spaces'
+    ]
+  },
+  'top-cider-bed1': {
+    lodgeKey: 'top-cider-bed1',
+    imageKey: 'cider',
+    venue: "Tops'l Farm Cider House",
+    room: 'Bedroom 1 - King Bed w/ Attached Bath (first floor)',
+    price: 498,
+    checkIn: '3pm, Friday, October 2nd',
+    checkOut: 'Noon, Sunday, October 4th',
+    venueTeaser: "To accommodate as many friends and relatives as possible, we've reserved and allocated rooms for guests. Your assigned room is at the Tops'l Farm Cider House.",
+    venueDescription: 'A lovingly restored cider house on the Tops\'l property, with a big shared kitchen and gathering space and several bedrooms — a warm, sociable place to stay steps from the celebration.',
+    roomDescription: 'A first-floor bedroom with a king bed and an attached private bath — the most comfortable room in the house, with easy access to the common areas.',
+    inclusions: [
+      'King bed with attached private bath',
+      'Bedding & linens, including towels',
+      'Organic shampoo, conditioner & soap',
+      'Full use of the shared kitchen & common spaces'
+    ]
+  }
+};

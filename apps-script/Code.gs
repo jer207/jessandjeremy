@@ -2,7 +2,7 @@
  * Wedding RSVP backend — Google Apps Script.
  *
  * Setup:
- *   1. Create a Google Sheet with three tabs: Households, RSVPs, Admins.
+ *   1. Create a Google Sheet with four tabs: Households, RSVPs, Admins, Room Specs.
  *      See README for the exact column headers.
  *   2. Extensions → Apps Script. Paste this file in as Code.gs.
  *   3. Set the script properties (Project Settings → Script Properties):
@@ -32,6 +32,7 @@ function doPost(e) {
     else if (action === 'getHousehold') out = getHousehold(body.householdId);
     else if (action === 'submitRsvp') out = submitRsvp(body.householdId, body.rsvpData);
     else if (action === 'getAllHouseholds') out = getAllHouseholds(body.adminName);
+    else if (action === 'setLodgingPaid') out = setLodgingPaid(body.householdId, body.paid, body.adminName);
     else out = { error: 'Unknown action' };
 
     return jsonResponse(out);
@@ -89,8 +90,42 @@ function loadHouseholds() {
     children: r.children ? String(r.children).split(/[;,]/).map(s => s.trim()).filter(Boolean) : [],
     plusOneAllowed: r.plus_one_allowed === true || String(r.plus_one_allowed).toLowerCase() === 'true' ||
                     Number(r.plus_one_allowed) === 1,
-    topslLodgingNote: r.topsl_lodging_note ? String(r.topsl_lodging_note).trim() : ''
+    lodgeKey: r.lodge_key ? String(r.lodge_key).trim() : '',
+    lodgingPaid: r.lodging_paid === true || String(r.lodging_paid).toLowerCase() === 'true' ||
+                 Number(r.lodging_paid) === 1
   }));
+}
+
+// Room Specs tab → map keyed by lodge_key. Joined into households by getHousehold
+// and getAllHouseholds so the invitation, lodging, and thank-you pages get the
+// full room detail without a second round trip.
+function loadRoomSpecs() {
+  const rows = readAll('Room Specs');
+  const map = {};
+  rows.forEach(r => {
+    const key = r.lodge_key ? String(r.lodge_key).trim() : '';
+    if (!key) return;
+    map[key] = {
+      lodgeKey: key,
+      imageKey: String(r.image_key || '').trim(),
+      venue: String(r.venue || '').trim(),
+      room: String(r.room || '').trim(),
+      price: Number(r.room_price) || 0,
+      checkIn: String(r.check_in || '').trim(),
+      checkOut: String(r.check_out || '').trim(),
+      venueTeaser: String(r.venue_teaser || '').trim(),
+      venueDescription: String(r.venue_description || '').trim(),
+      roomDescription: String(r.room_description || '').trim(),
+      inclusions: r.inclusions ? String(r.inclusions).split(';').map(s => s.trim()).filter(Boolean) : []
+    };
+  });
+  return map;
+}
+
+// Returns a shallow copy of the household with its joined lodging (or null).
+function attachLodging(h, specs) {
+  const lodging = (h.lodgeKey && specs[h.lodgeKey]) ? specs[h.lodgeKey] : null;
+  return Object.assign({}, h, { lodging: lodging });
 }
 
 function loadAdmins() {
@@ -164,7 +199,8 @@ function getHousehold(householdId) {
   const h = loadHouseholds().find(x => x.id === householdId);
   if (!h) return null;
   const rsvps = loadRsvps();
-  return Object.assign({}, h, { rsvp: rsvps[householdId] || null });
+  const specs = loadRoomSpecs();
+  return Object.assign({}, attachLodging(h, specs), { rsvp: rsvps[householdId] || null });
 }
 
 function submitRsvp(householdId, rsvpData) {
@@ -247,7 +283,44 @@ function getAllHouseholds(adminName) {
 
   const households = loadHouseholds();
   const rsvps = loadRsvps();
-  return households.map(h => Object.assign({}, h, { rsvp: rsvps[h.id] || null }));
+  const specs = loadRoomSpecs();
+  return households.map(h => Object.assign({}, attachLodging(h, specs), { rsvp: rsvps[h.id] || null }));
+}
+
+// Admin-only: mark a household's lodging as paid (or unpaid). Writes 1/0 to the
+// Households.lodging_paid cell. findGuest already verified admin before the
+// dashboard loaded; we re-check here in case someone POSTs directly.
+function setLodgingPaid(householdId, paid, adminName) {
+  const admins = loadAdmins().map(a => a.toLowerCase());
+  const name = String(adminName || '').toLowerCase().trim();
+  if (!name || !admins.some(a => a === name || name.startsWith(a + ' '))) {
+    return { ok: false, error: 'Not authorized' };
+  }
+  if (!householdId) return { ok: false, error: 'Missing householdId' };
+
+  const lock = LockService.getScriptLock();
+  try { lock.waitLock(10000); } catch (e) {
+    return { ok: false, error: 'Server busy, please try again.' };
+  }
+  try {
+    const sh = sheet('Households');
+    const values = sh.getDataRange().getValues();
+    const headers = values[0];
+    const idCol = headers.indexOf('id');
+    const paidCol = headers.indexOf('lodging_paid');
+    if (idCol < 0 || paidCol < 0) {
+      return { ok: false, error: 'Missing id or lodging_paid column' };
+    }
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][idCol]).trim() === String(householdId)) {
+        sh.getRange(i + 1, paidCol + 1).setValue(paid ? 1 : 0);
+        return { ok: true, lodgingPaid: !!paid };
+      }
+    }
+    return { ok: false, error: 'Household not found' };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ---------- Email alert ----------

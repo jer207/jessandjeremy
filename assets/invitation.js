@@ -106,7 +106,7 @@
 function renderNav(submitted) {
   const rightAction = submitted
     ? `<button class="btn btn-secondary btn-small" data-action="open-contact" type="button">
-         <span aria-hidden="true">✉</span> Contact
+         ${mailIcon()} Contact
        </button>`
     : `<button class="btn btn-small btn-coral" data-action="open-rsvp" type="button">RSVP</button>`;
 
@@ -176,34 +176,68 @@ function renderConfirmedCard(h) {
 }
 
 function renderItinerary(isBoth) {
-  const days = [];
+  let cardsHtml;
   if (isBoth) {
-    days.push({ anchor: 'itinerary-day-1', label: 'Day One',   data: WEDDING.dayOne,   accent: 'olive' });
-    days.push({ anchor: 'itinerary-day-2', label: 'Day Two',   data: WEDDING.dayTwo,   accent: 'coral' });
-    days.push({ anchor: 'itinerary-day-3', label: 'Day Three', data: WEDDING.dayThree, accent: 'olive' });
+    cardsHtml =
+      renderDayCard({ anchor: 'itinerary-day-1', label: 'Day One', data: WEDDING.dayOne, accent: 'olive' })
+      + renderSaturdayCard()
+      + renderDayCard({ anchor: 'itinerary-day-3', label: 'Day Three', data: WEDDING.dayThree, accent: 'olive' });
   } else {
-    days.push({ anchor: 'itinerary-day-1', label: 'Saturday',  data: WEDDING.dayTwo,   accent: 'coral' });
+    // Day-2-only guests: single Saturday card with the Day-2 copy.
+    const sat = {
+      label: WEDDING.dayTwo.label,
+      title: WEDDING.dayTwo.title,
+      location: WEDDING.dayTwo.location,
+      details: WEDDING.dayTwoDay2Details
+    };
+    cardsHtml = renderDayCard({ anchor: 'itinerary-day-1', label: 'Saturday', data: sat, accent: 'coral' });
   }
 
-  const cardsHtml = days.map(d => {
-    const coral = d.accent === 'coral';
-    return `
-      <article class="day-card ${coral ? 'coral' : ''}" id="${d.anchor}">
-        <div class="day-eyebrow">
-          <span class="day-pill ${coral ? 'day-pill-coral' : ''}">${escapeHtml(d.label)}</span>
-          <span class="day-date">${escapeHtml(d.data.label)}</span>
-        </div>
-        <h2>${escapeHtml(d.data.title)}</h2>
-        <div class="day-place">${pinIcon()} ${escapeHtml(d.data.location)}</div>
-        <p class="day-body">${escapeHtml(d.data.details)}</p>
-      </article>
-    `;
-  }).join('');
+  const note = WEDDING.itineraryNote
+    ? `<p class="itinerary-note">${escapeHtml(WEDDING.itineraryNote)}</p>`
+    : '';
 
   return `
     <section id="itinerary" class="itinerary">
+      ${note}
       <div class="itinerary-grid">${cardsHtml}</div>
     </section>
+  `;
+}
+
+function renderDayCard(d) {
+  const coral = d.accent === 'coral';
+  return `
+    <article class="day-card ${coral ? 'coral' : ''}" id="${d.anchor}">
+      <div class="day-eyebrow">
+        <span class="day-pill ${coral ? 'day-pill-coral' : ''}">${escapeHtml(d.label)}</span>
+        <span class="day-date">${escapeHtml(d.data.label)}</span>
+      </div>
+      <h2>${escapeHtml(d.data.title)}</h2>
+      <div class="day-place">${pinIcon()} ${escapeHtml(d.data.location)}</div>
+      <p class="day-body">${escapeHtml(d.data.details)}</p>
+    </article>
+  `;
+}
+
+// Both-day Saturday: one coral card holding three stacked time-blocks.
+function renderSaturdayCard() {
+  const d = WEDDING.dayTwo;
+  const sections = (WEDDING.saturdaySections || []).map(s => `
+    <div class="day-section">
+      <h3>${escapeHtml(s.title)}</h3>
+      <p>${escapeHtml(s.body)}</p>
+    </div>
+  `).join('');
+  return `
+    <article class="day-card coral" id="itinerary-day-2">
+      <div class="day-eyebrow">
+        <span class="day-pill day-pill-coral">Day Two</span>
+        <span class="day-date">${escapeHtml(d.label)}</span>
+      </div>
+      <div class="day-place">${pinIcon()} ${escapeHtml(d.location)}</div>
+      <div class="day-sections">${sections}</div>
+    </article>
   `;
 }
 
@@ -230,39 +264,69 @@ function renderDirections() {
 }
 
 function renderAccommodations(h) {
-  const parsed = parseLodgingNote(h.topslLodgingNote);
-  if (parsed) {
-    return `
-      <section id="accommodations" class="inv-section inv-section-soft">
-        <div class="inv-section-wide">
-          <div class="section-head">
-            <p class="eyebrow">Where to stay</p>
-            <h2>Accommodations</h2>
-          </div>
-          <div class="acc-grid">
-            <div class="lodging-card featured">
-              <div class="reserved-pill">${tentIcon()} Reserved for you</div>
-              <h3>${escapeHtml(parsed.heading)}</h3>
-              <p>${escapeHtml(parsed.body).replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')}</p>
-              <a class="btn" href="${WEDDING.topslLodgingUrl}" target="_blank" rel="noopener">
-                Book on-site lodging at Tops'l Farm &rarr;
-              </a>
-            </div>
-            <div class="lodging-card">
-              <p class="eyebrow" style="margin-bottom: 16px;">Staying off-farm?</p>
-              <h3 style="font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2;">Let us know so we can offer your site to another guest.</h3>
-              <p>You can mark this when you RSVP. There are a handful of inns in nearby Damariscotta and Rockland; we're happy to share favorites — just ask.</p>
-              <a class="btn btn-secondary btn-small" href="mailto:${WEDDING.contactEmail}">
-                Ask us for ideas &rarr;
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-    `;
+  const isBoth = h.tier === 'both';
+  const lodging = h.lodging;
+
+  // Both-day households with an assigned room: CTA if unpaid, confirmed card if paid.
+  if (isBoth && lodging) {
+    return h.lodgingPaid ? renderLodgingConfirmed(lodging) : renderLodgingCta(lodging);
   }
 
-  // No on-site assignment: show off-site recommendations as a clickable card grid.
+  // Everyone else (Day-2, or both-day with no assignment): off-site recommendations.
+  return renderOffsiteList();
+}
+
+// Unpaid, assigned: room name, venue subtitle, teaser, and a link to the lodging page.
+function renderLodgingCta(L) {
+  return `
+    <section id="accommodations" class="inv-section inv-section-soft">
+      <div class="inv-section-wide">
+        <div class="section-head">
+          <p class="eyebrow">Where to stay</p>
+          <h2>Accommodations</h2>
+        </div>
+        <div class="acc-cta">
+          <div class="lodging-card featured">
+            <div class="reserved-pill">${tentIcon()} Reserved for you</div>
+            <h3>${escapeHtml(L.room)}</h3>
+            <div class="acc-venue">${escapeHtml(L.venue)}</div>
+            <p>${escapeHtml(L.venueTeaser || '')}</p>
+            <a class="btn" href="lodging.html">Confirm Your Reservation &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+// Paid: compact confirmed card — room, check-in/out, and what's included.
+function renderLodgingConfirmed(L) {
+  const inclusions = (L.inclusions || []).map(i => `<li>${escapeHtml(i)}</li>`).join('');
+  return `
+    <section id="accommodations" class="inv-section inv-section-soft">
+      <div class="inv-section-wide">
+        <div class="section-head">
+          <p class="eyebrow">Where to stay</p>
+          <h2>Accommodations</h2>
+        </div>
+        <div class="acc-confirmed">
+          <div class="reserved-pill paid">${checkIcon()} Reservation confirmed</div>
+          <h3>You're all set at ${escapeHtml(L.venue)}</h3>
+          <div class="acc-room">${escapeHtml(L.room)}</div>
+          <div class="acc-inout">
+            <div><span class="lbl">Check-in</span><span class="val">${escapeHtml(L.checkIn || '')}</span></div>
+            <div><span class="lbl">Check-out</span><span class="val">${escapeHtml(L.checkOut || '')}</span></div>
+          </div>
+          ${inclusions ? `<div class="acc-incl"><p class="acc-incl-label">What's included</p><ul class="acc-incl-list">${inclusions}</ul></div>` : ''}
+          <p class="acc-confirmed-foot">Questions about your stay? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.</p>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+// Off-site recommendations as a clickable card grid.
+function renderOffsiteList() {
   const items = (WEDDING.accommodations || []).map(a => {
     const hasUrl = a.url && a.url !== '#';
     const open = hasUrl ? `<a class="lodging-card-link" href="${a.url}" target="_blank" rel="noopener">` : '<div class="lodging-card-link">';
@@ -292,14 +356,6 @@ function renderAccommodations(h) {
   `;
 }
 
-function parseLodgingNote(note) {
-  if (!note || !String(note).trim()) return null;
-  const text = String(note);
-  const idx = text.indexOf(';');
-  if (idx < 0) return { heading: 'Your reserved site', body: text.trim() };
-  return { heading: text.slice(0, idx).trim(), body: text.slice(idx + 1).trim() };
-}
-
 function renderRegistry() {
   return `
     <section id="registry" class="inv-section registry">
@@ -310,7 +366,7 @@ function renderRegistry() {
           <p class="intro">Your presence is the gift, truly. But if you'd like to send something, our registry is here.</p>
         </div>
         <a class="btn btn-coral" href="${WEDDING.registryUrl}" target="_blank" rel="noopener">
-          View our registry &rarr;
+          View our registry &#8599;
         </a>
       </div>
     </section>
@@ -545,6 +601,15 @@ function pinIcon() {
 
 function tentIcon() {
   return '<svg class="icn" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 21 12 4l8.5 17z"/><path d="M12 4v17"/><path d="M8.5 21l3.5-5 3.5 5"/></svg>';
+}
+
+// Hand-drawn "open note" envelope, matching the pin/tent line-art set.
+function mailIcon() {
+  return '<svg class="icn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5 v9 h19 v-9"/><path d="M2.5 9.5 L 12 3 L 21.5 9.5"/><path d="M2.5 9.5 L 12 15 L 21.5 9.5"/></svg>';
+}
+
+function checkIcon() {
+  return '<svg class="icn" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9 17.5 20 6.5"/></svg>';
 }
 
 function setupDemoBanner() {

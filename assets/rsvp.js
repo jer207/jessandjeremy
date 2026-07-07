@@ -4,8 +4,6 @@
 //   window.RsvpModal.open(household, { onSuccess })
 //     - Opens the modal mounted on #modalRoot
 //     - Calls onSuccess() after the user finishes the success step and clicks "Back"
-//
-// The accommodations step is included only when household.topslLodgingNote is non-empty.
 
 (function () {
 
@@ -14,8 +12,6 @@
     const modalRoot = document.getElementById('modalRoot') || mountFallbackRoot();
 
     const isBoth = household.tier === 'both';
-    const lodging = parseLodgingNote(household.topslLodgingNote);
-    const hasLodging = !!lodging;
 
     const attendees = [
       ...household.adults.map(a => ({
@@ -41,7 +37,6 @@
     const state = {
       attendees,
       plusOne,
-      accommodations: hasLodging ? 'onsite' : null,
       notes: '',
       contactEmail: (household.adults[0] && household.adults[0].email) || ''
     };
@@ -49,7 +44,6 @@
     const steps = [];
     attendees.forEach((_, i) => steps.push({ type: 'attendee', index: i }));
     if (plusOne) steps.push({ type: 'plusOne' });
-    if (hasLodging) steps.push({ type: 'accommodations' });
     steps.push({ type: 'notes' });
     steps.push({ type: 'review' });
     const totalInputSteps = steps.length;
@@ -181,15 +175,12 @@
       } else if (step.type === 'plusOne') {
         stepLabel = 'Plus one';
         contents = renderPlusOne(plusOne, isBoth);
-      } else if (step.type === 'accommodations') {
-        stepLabel = 'Accommodations';
-        contents = renderAccommodations(state.accommodations, lodging);
       } else if (step.type === 'notes') {
         stepLabel = 'Household message';
         contents = renderNotes(state);
       } else {
         stepLabel = 'Review';
-        contents = renderReview(state, isBoth, household, hasLodging);
+        contents = renderReview(state, isBoth, household);
       }
       const stepCount = `${currentStep + 1} of ${totalInputSteps}`;
       return `
@@ -351,38 +342,6 @@
       `;
     }
 
-    function renderAccommodations(value, lodging) {
-      const body = lodging ? lodging.body : '';
-      return `
-        <h2>Will you be staying with us overnight?</h2>
-        <p class="step-question tight">${escapeHtml(body).replace(/\n\n+/g, '</p><p class="step-question tight">').replace(/\n/g, '<br>')}</p>
-        <div style="margin-bottom: 28px;">
-          <a class="btn btn-secondary btn-small" href="${WEDDING.topslLodgingUrl}" target="_blank" rel="noopener">
-            Details &amp; booking at Tops'l Farm &rarr;
-          </a>
-        </div>
-        <label class="field" style="display: block;">
-          <span class="field-label">Please check one:</span>
-          <div class="choice-grid">
-            <button type="button" class="choice radio ${value === 'onsite' ? 'checked' : ''}" data-acc="onsite">
-              <span class="choice-mark"><span class="choice-mark-dot"></span></span>
-              <span class="choice-body">
-                <div class="choice-title">Yes, we have or plan to book at Tops'l Farm</div>
-                <div class="choice-sub">We'll save your reserved site</div>
-              </span>
-            </button>
-            <button type="button" class="choice radio ${value === 'offsite' ? 'checked' : ''}" data-acc="offsite">
-              <span class="choice-mark"><span class="choice-mark-dot"></span></span>
-              <span class="choice-body">
-                <div class="choice-title">No, we will make other overnight arrangements</div>
-                <div class="choice-sub">We'll offer the site to another guest</div>
-              </span>
-            </button>
-          </div>
-        </label>
-      `;
-    }
-
     function renderNotes(s) {
       return `
         <h2>Anything else?</h2>
@@ -398,22 +357,12 @@
       `;
     }
 
-    function renderReview(s, isBoth, h, hasLodging) {
+    function renderReview(s, isBoth, h) {
       const rows = [];
       s.attendees.forEach(a => rows.push(reviewRow(a.name, a, isBoth)));
       if (s.plusOne && s.plusOne.bringing && s.plusOne.name.trim()) {
         rows.push(reviewRow(s.plusOne.name + ' (guest)', s.plusOne, isBoth));
       }
-
-      const anyAttending = s.attendees.some(a => a.attending.day1 || a.attending.day2)
-        || (s.plusOne && s.plusOne.bringing && (s.plusOne.attending.day1 || s.plusOne.attending.day2));
-      const showLodging = hasLodging && anyAttending;
-      const lodgingRow = showLodging ? `
-        <div class="review-row lodging-row">
-          <div class="meta-label">Lodging</div>
-          <div class="status">${s.accommodations === 'onsite' ? "Tops'l Farm site" : 'Off-site'}</div>
-        </div>
-      ` : '';
 
       const noteRow = s.notes ? `
         <div class="review-row note-row">
@@ -427,7 +376,6 @@
         <p class="step-question">Make sure everything looks right.</p>
         <div class="review-list">
           ${rows.join('')}
-          ${lodgingRow}
           ${noteRow}
         </div>
         <p class="review-footnote">
@@ -524,15 +472,6 @@
         if (dietary) dietary.addEventListener('input', e => { po.dietary = e.target.value; });
       }
 
-      if (step.type === 'accommodations') {
-        document.querySelectorAll('.choice[data-acc]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            state.accommodations = btn.getAttribute('data-acc');
-            render();
-          });
-        });
-      }
-
       if (step.type === 'notes') {
         document.getElementById('notes').addEventListener('input', e => { state.notes = e.target.value; });
         const emailInput = document.getElementById('contactEmail');
@@ -546,7 +485,6 @@
 
     function isStepValid(step) {
       if (step.type === 'notes') return (state.contactEmail || '').includes('@');
-      if (step.type === 'accommodations') return state.accommodations === 'onsite' || state.accommodations === 'offsite';
       return true;
     }
 
@@ -568,12 +506,9 @@
       btn.disabled = true;
       btn.textContent = 'Submitting…';
 
-      const anyAttending = state.attendees.some(a => a.attending.day1 || a.attending.day2)
-        || (state.plusOne && state.plusOne.bringing && (state.plusOne.attending.day1 || state.plusOne.attending.day2));
       const payload = {
         attendees: state.attendees,
         plusOne: (state.plusOne && state.plusOne.bringing && state.plusOne.name.trim()) ? state.plusOne : null,
-        accommodations: (hasLodging && anyAttending) ? state.accommodations : null,
         notes: state.notes,
         contactEmail: state.contactEmail
       };
@@ -600,14 +535,6 @@
   }
 
   // ---------- Helpers ----------
-
-  function parseLodgingNote(note) {
-    if (!note || !String(note).trim()) return null;
-    const text = String(note);
-    const idx = text.indexOf(';');
-    if (idx < 0) return { heading: 'Your reserved site', body: text.trim() };
-    return { heading: text.slice(0, idx).trim(), body: text.slice(idx + 1).trim() };
-  }
 
   function displayName(h) {
     const adults = h.adults;

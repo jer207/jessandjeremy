@@ -10,6 +10,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx6AkQYFDfCyUT2
 
 const LS_RSVP_KEY = 'wedding.rsvps.v1';
 const LS_SESSION_KEY = 'wedding.session.v1';
+const LS_PAID_KEY = 'wedding.lodgingPaid.v1'; // demo-mode overrides for the admin paid toggle
 
 // ---- Session (which household the visitor is viewing) ----
 
@@ -82,7 +83,18 @@ async function getHousehold(householdId) {
   const h = HOUSEHOLDS.find(x => x.id === householdId);
   if (!h) return null;
   const rsvp = getAllRsvps()[householdId] || null;
-  return { ...h, rsvp };
+  return { ...withLodging(h), rsvp };
+}
+
+async function setLodgingPaid(householdId, paid) {
+  if (MODE === 'remote') {
+    const session = getSession();
+    return remoteCall('setLodgingPaid', { householdId, paid: !!paid, adminName: session ? session.name : '' });
+  }
+  const overrides = getDemoPaidOverrides();
+  overrides[householdId] = !!paid;
+  localStorage.setItem(LS_PAID_KEY, JSON.stringify(overrides));
+  return { ok: true };
 }
 
 async function submitRsvp(householdId, rsvpData) {
@@ -99,7 +111,7 @@ async function getAllHouseholdsForAdmin() {
     return remoteCall('getAllHouseholds', { adminName: session ? session.name : '' });
   }
   const rsvps = getAllRsvps();
-  return HOUSEHOLDS.map(h => ({ ...h, rsvp: rsvps[h.id] || null }));
+  return HOUSEHOLDS.map(h => ({ ...withLodging(h), rsvp: rsvps[h.id] || null }));
 }
 
 // ---- Demo helpers ----
@@ -112,9 +124,28 @@ function getAllRsvps() {
   }
 }
 
+// Demo mode joins the mock ROOM_SPECS catalog and applies any paid overrides,
+// mirroring what the Apps Script backend returns in remote mode.
+function withLodging(h) {
+  const specs = (typeof ROOM_SPECS !== 'undefined') ? ROOM_SPECS : {};
+  const lodging = h.lodgeKey ? (specs[h.lodgeKey] || null) : null;
+  const overrides = getDemoPaidOverrides();
+  const paid = Object.prototype.hasOwnProperty.call(overrides, h.id) ? !!overrides[h.id] : !!h.lodgingPaid;
+  return { ...h, lodging, lodgingPaid: paid };
+}
+
+function getDemoPaidOverrides() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_PAID_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
 function resetDemoData() {
   localStorage.removeItem(LS_RSVP_KEY);
   localStorage.removeItem(LS_SESSION_KEY);
+  localStorage.removeItem(LS_PAID_KEY);
 }
 
 // ---- Remote (Apps Script) ----

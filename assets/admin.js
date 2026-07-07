@@ -79,6 +79,7 @@
 
   document.getElementById('exportBtn').addEventListener('click', () => exportCsv(households));
   document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
+  wirePaidToggles();
 })();
 
 function stat(num, label) {
@@ -90,6 +91,8 @@ function renderRow(h) {
   const tierTag = h.tier === 'both'
     ? '<span class="tier-tag both">Both Days</span>'
     : '<span class="tier-tag">Day 2</span>';
+  const lodgingCell = renderLodgingCell(h);
+  const dash = '<span style="color: var(--fg-3);">—</span>';
 
   if (!h.rsvp) {
     return `
@@ -97,7 +100,9 @@ function renderRow(h) {
         <td><strong>${householdName}</strong>${childList(h.children)}</td>
         <td>${tierTag}</td>
         <td><span class="status-tag pending">Pending</span></td>
-        <td colspan="4" style="color: var(--fg-3); font-style: italic;">No response yet</td>
+        <td colspan="2" style="color: var(--fg-3); font-style: italic;">No response yet</td>
+        <td>${lodgingCell}</td>
+        <td>${dash}</td>
       </tr>
     `;
   }
@@ -110,8 +115,6 @@ function renderRow(h) {
     .map(a => `${a.name || h.adults[0].firstName + "'s guest"}: ${a.dietary}`)
     .join('<br>');
 
-  const lodging = formatLodging(r.accommodations);
-
   return `
     <tr>
       <td>
@@ -121,17 +124,56 @@ function renderRow(h) {
       <td>${tierTag}</td>
       <td><span class="status-tag responded">Responded</span></td>
       <td><ul class="attendee-list">${attendeeLis.join('')}</ul></td>
-      <td>${dietary || '<span style="color: var(--fg-3);">—</span>'}</td>
-      <td>${lodging}</td>
-      <td>${r.notes ? escapeHtml(r.notes) : '<span style="color: var(--fg-3);">—</span>'}</td>
+      <td>${dietary || dash}</td>
+      <td>${lodgingCell}</td>
+      <td>${r.notes ? escapeHtml(r.notes) : dash}</td>
     </tr>
   `;
 }
 
-function formatLodging(value) {
-  if (value === 'onsite') return "<strong>On-site</strong>";
-  if (value === 'offsite') return 'Off-site';
-  return '<span style="color: var(--fg-3);">—</span>';
+// Lodging column: assigned room + venue + a reversible "paid" toggle.
+// Households with no assignment show a dash.
+function renderLodgingCell(h) {
+  if (!h.lodgeKey || !h.lodging) {
+    return '<span style="color: var(--fg-3);">—</span>';
+  }
+  const L = h.lodging;
+  const paid = !!h.lodgingPaid;
+  return `
+    <div class="lodge-cell">
+      <div class="lodge-room">${escapeHtml(L.room)}</div>
+      <div class="lodge-venue">${escapeHtml(L.venue)}</div>
+      <button type="button" class="paid-toggle ${paid ? 'is-paid' : ''}" data-household="${escapeHtml(h.id)}" aria-pressed="${paid}">
+        ${paid ? '✓ Paid' : 'Mark paid'}
+      </button>
+    </div>
+  `;
+}
+
+function setPaidButton(btn, paid) {
+  btn.classList.toggle('is-paid', paid);
+  btn.textContent = paid ? '✓ Paid' : 'Mark paid';
+  btn.setAttribute('aria-pressed', String(paid));
+}
+
+function wirePaidToggles() {
+  document.querySelectorAll('.paid-toggle').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-household');
+      const makePaid = !btn.classList.contains('is-paid');
+      btn.disabled = true;
+      setPaidButton(btn, makePaid); // optimistic
+      try {
+        const res = await setLodgingPaid(id, makePaid);
+        if (!res || res.error || res.ok === false) throw new Error((res && res.error) || 'failed');
+      } catch (e) {
+        setPaidButton(btn, !makePaid); // revert
+        alert('Could not update payment status. Please try again.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 function attendeeLine(a, isBoth, isPlusOne) {
@@ -171,12 +213,15 @@ function exportCsv(households) {
     'household_id', 'household_name', 'tier', 'status',
     'person_name', 'person_role',
     'attending_day1', 'attending_day2',
-    'dietary', 'accommodations', 'notes', 'contact_email', 'submitted_at'
+    'dietary', 'assigned_room', 'venue', 'lodging_paid', 'notes', 'contact_email', 'submitted_at'
   ];
   const rows = [headers];
 
   households.forEach(h => {
     const householdName = h.adults.map(a => `${a.firstName} ${a.lastName}`).join(' & ');
+    const room = h.lodging ? h.lodging.room : '';
+    const venue = h.lodging ? h.lodging.venue : '';
+    const paid = h.lodgeKey ? (h.lodgingPaid ? 'yes' : 'no') : '';
 
     if (!h.rsvp) {
       // One row per invited person showing pending
@@ -186,13 +231,12 @@ function exportCsv(households) {
       ];
       if (h.plusOneAllowed) people.push({ name: '(guest)', role: 'plus_one' });
       people.forEach(p => {
-        rows.push([h.id, householdName, h.tier, 'pending', p.name, p.role, '', '', '', '', '', h.adults[0].email || '', '']);
+        rows.push([h.id, householdName, h.tier, 'pending', p.name, p.role, '', '', '', room, venue, paid, '', h.adults[0].email || '', '']);
       });
       return;
     }
 
     const r = h.rsvp;
-    const acc = r.accommodations || '';
     r.attendees.forEach(a => {
       rows.push([
         h.id, householdName, h.tier, 'responded',
@@ -200,7 +244,7 @@ function exportCsv(households) {
         a.attending.day1 ? 'yes' : 'no',
         a.attending.day2 ? 'yes' : 'no',
         a.dietary || '',
-        acc,
+        room, venue, paid,
         r.notes || '',
         r.contactEmail || '',
         r.submittedAt
@@ -213,7 +257,7 @@ function exportCsv(households) {
         r.plusOne.attending.day1 ? 'yes' : 'no',
         r.plusOne.attending.day2 ? 'yes' : 'no',
         r.plusOne.dietary || '',
-        acc,
+        room, venue, paid,
         '', r.contactEmail || '', r.submittedAt
       ]);
     }
