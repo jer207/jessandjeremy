@@ -212,13 +212,19 @@
       const message = anyAttending
         ? `Your RSVP is in. We've logged <strong>${going} of ${total}</strong> attending from your household.`
         : `Thanks for letting us know — we'll miss you. Hope to celebrate together another time.`;
+      // Attending households with an assigned, unpaid room get sent to the lodging page.
+      const showLodgingCta = anyAttending && household.lodging && !household.lodgingPaid;
+      const actions = showLodgingCta
+        ? `<a class="btn" href="lodging.html">Review &amp; Confirm Lodging &rarr;</a>
+           <button type="button" class="btn btn-ghost" id="successBackBtn">Return to Invitation</button>`
+        : `<button type="button" class="btn" id="successBackBtn">Return to Invitation</button>`;
       return `
         <div class="success">
           <div class="success-check">&#10003;</div>
           <h2>${heading}</h2>
           <p>${message}</p>
           <p class="small">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a>.</p>
-          <button type="button" class="btn" id="successBackBtn">Back to invitation</button>
+          <div class="success-actions">${actions}</div>
         </div>
       `;
     }

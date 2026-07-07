@@ -1490,6 +1490,13 @@ a.lodging-card-link:hover {
   margin: 16px auto 28px;
 }
 .success a { color: var(--olive-3); }
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.success-actions a.btn { color: var(--cream); }
 
 /* Contact modal specifics */
 .modal-card.contact h2 {

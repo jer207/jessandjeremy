@@ -45,7 +45,7 @@ function renderNav() {
 }
 
 function renderMain(h, L) {
-  const eyebrow = 'Reserved for ' + escapeHtml(adultFirstNames(h)) + ' · ' + escapeHtml(L.venue);
+  const eyebrow = 'Reserved for ' + escapeHtml(adultFirstNames(h));
   const price = formatPrice(L.price);
   const roomWord = L.imageKey === 'aframe' ? 'Your Cabin' : 'Your Room';
 
@@ -63,7 +63,7 @@ function renderMain(h, L) {
     <main class="lodge-main">
       <header class="lodge-head">
         <p class="eyebrow lodge-eyebrow">${eyebrow}</p>
-        <h1 class="lodge-room-title">${escapeHtml(L.room)}</h1>
+        <h1 class="lodge-room-title">${escapeHtml(L.venue + ': ' + L.room)}</h1>
         <div class="lodge-meta">
           <span class="lodge-price">$${price}<span class="lodge-price-unit">/ for the weekend</span></span>
           <span class="lodge-assigned">${tentIcon()} Assigned to your household</span>
