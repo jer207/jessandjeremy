@@ -729,6 +729,7 @@ img { max-width: 100%; height: auto; }
   margin: 0;
 }
 .confirmed-card .footnote a { color: var(--olive-3); }
+.confirmed-card .confirmed-lockin { margin: 4px 0 16px; }
 
 /* Section base */
 .inv-section {
@@ -1508,7 +1509,10 @@ a.lodging-card-link:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px;
+  align-items: start;
 }
+/* Side-by-side fields must not inherit the stacked-field top margin. */
+.contact-row .field + .field { margin-top: 0; }
 .contact-actions {
   display: flex;
   justify-content: space-between;

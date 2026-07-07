@@ -52,6 +52,16 @@
     btn.addEventListener('click', openContactModal);
   });
 
+  document.querySelectorAll('[data-action="scroll-accommodations"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const el = document.getElementById('accommodations');
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 90;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+
   // ---------- Modal ----------
 
   function openContactModal() {
@@ -162,6 +172,11 @@ function renderHero(householdName, subhead, h) {
 function renderConfirmedCard(h) {
   const summary = attendingSummary(h);
   const submittedDate = formatLongDate(h.rsvp.submittedAt);
+  // Assigned but not yet paid: nudge them down to the accommodations CTA.
+  const showLockIn = h.tier === 'both' && h.lodging && !h.lodgingPaid;
+  const lockIn = showLockIn
+    ? `<a class="btn btn-small confirmed-lockin" href="#accommodations" data-action="scroll-accommodations">Lock in your Accommodations &rarr;</a>`
+    : '';
   return `
     <div class="confirmed-card">
       <div class="confirmed-card-header">
@@ -170,6 +185,7 @@ function renderConfirmedCard(h) {
       </div>
       <p>Thank you — we have your response logged on ${escapeHtml(submittedDate)}.</p>
       <p class="attending-summary">${escapeHtml(summary)}</p>
+      ${lockIn}
       <p class="footnote">Need to make a change? Email <a href="mailto:${WEDDING.contactEmail}">${WEDDING.contactEmail}</a> and we'll update it.</p>
     </div>
   `;
