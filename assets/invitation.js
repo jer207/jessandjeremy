@@ -276,7 +276,7 @@ function renderAccommodations(h) {
   return renderOffsiteList();
 }
 
-// Unpaid, assigned: room name, venue subtitle, teaser, and a link to the lodging page.
+// Unpaid, assigned: the reserved-room CTA plus the "staying off-farm?" card.
 function renderLodgingCta(L) {
   return `
     <section id="accommodations" class="inv-section inv-section-soft">
@@ -285,13 +285,21 @@ function renderLodgingCta(L) {
           <p class="eyebrow">Where to stay</p>
           <h2>Accommodations</h2>
         </div>
-        <div class="acc-cta">
+        <div class="acc-grid">
           <div class="lodging-card featured">
             <div class="reserved-pill">${tentIcon()} Reserved for you</div>
             <h3>${escapeHtml(L.room)}</h3>
             <div class="acc-venue">${escapeHtml(L.venue)}</div>
             <p>${escapeHtml(L.venueTeaser || '')}</p>
             <a class="btn" href="lodging.html">Confirm Your Reservation &rarr;</a>
+          </div>
+          <div class="lodging-card">
+            <p class="eyebrow" style="margin-bottom: 16px;">Staying off-farm?</p>
+            <h3 style="font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2;">Let us know so we can offer your site to another guest.</h3>
+            <p>If you'd rather make other arrangements, just email us and we'll pass your site along. There are a handful of inns in nearby Damariscotta and Rockland; we're happy to share favorites — just ask.</p>
+            <a class="btn btn-secondary btn-small" href="mailto:${WEDDING.contactEmail}">
+              Ask us for ideas &rarr;
+            </a>
           </div>
         </div>
       </div>
