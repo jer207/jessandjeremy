@@ -41,7 +41,7 @@ function renderMain(L) {
 
   return `
     <main class="thanks-main">
-      <div class="thanks-seal">${checkIcon()}</div>
+      <div class="thanks-seal">&#10003;</div>
       <p class="eyebrow thanks-eyebrow">Reservation confirmed</p>
       <h1 class="thanks-title">Thank you — you're all set</h1>
       <p class="thanks-lead">${recap}</p>
@@ -75,10 +75,6 @@ function bindNav() {
 }
 
 // ---------- Utilities ----------
-
-function checkIcon() {
-  return '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9 17.5 20 6.5"/></svg>';
-}
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({

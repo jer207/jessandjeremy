@@ -696,8 +696,10 @@ img { max-width: 100%; height: auto; }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 22px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
 }
 .confirmed-card h3 {
   font-family: var(--font-display);
@@ -1212,6 +1214,7 @@ a.lodging-card-link:hover {
 }
 .choice .choice-mark-tick { display: none; }
 .choice.checked .choice-mark-tick { display: inline; }
+.choice-mark-tick { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
 
 .choice.radio .choice-mark {
   border-radius: 999px;
@@ -1471,8 +1474,10 @@ a.lodging-card-link:hover {
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
-  font-size: 42px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 50px;
+  font-weight: 400;
+  line-height: 1;
   animation: success-pop 600ms var(--ease-bounce);
 }
 .success h2 {
@@ -1771,6 +1776,61 @@ a.lodging-card-link:hover {
   background: rgba(250, 249, 245, 0.1);
 }
 .has-demo-banner { padding-bottom: 48px; }
+/* Don't flash an empty banner bar before the mode script runs. */
+.demo-banner:empty { display: none; }
+
+/* ============================================================
+   Hand-drawn checkmark (matches the display-font ✓ on buttons)
+   ============================================================ */
+
+.hand-check {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1;
+  display: inline-block;
+}
+.reserved-pill .hand-check { font-size: 15px; }
+
+/* ============================================================
+   Page loading screen — warm gradient + spinning flower
+   ============================================================ */
+
+.page-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.page-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.loading-flower {
+  animation: flower-spin 3.4s cubic-bezier(0.5, 0.1, 0.4, 0.95) infinite;
+  transform-origin: 50% 50%;
+}
+.loading-flower .petal {
+  fill: var(--sage);
+  stroke: var(--olive);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.loading-flower .loading-flower-center { fill: var(--gold); }
+.loading-text {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4vw, 40px);
+  color: var(--olive);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+@keyframes flower-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 /* ============================================================
    Flash messages (lookup page)
@@ -2117,7 +2177,7 @@ a.lodging-card-link:hover {
   break-inside: avoid;
   margin-bottom: 14px;
 }
-.lodge-incl li .icn { color: var(--olive); margin-top: 2px; flex-shrink: 0; }
+.lodge-incl li .hand-check { color: var(--olive); font-size: 19px; margin-top: -1px; flex-shrink: 0; }
 .lodge-incl li span { text-wrap: pretty; }
 
 .lodge-aside { position: sticky; top: 96px; }
@@ -2236,6 +2296,10 @@ a.lodging-card-link:hover {
   margin-bottom: 28px;
   box-shadow: 0 8px 22px rgba(56, 76, 2, 0.18);
   animation: thanks-pop 600ms var(--ease-bounce);
+  font-family: var(--font-display);
+  font-size: 54px;
+  font-weight: 400;
+  line-height: 1;
 }
 @keyframes thanks-pop {
   0%   { transform: scale(0);   opacity: 0; }

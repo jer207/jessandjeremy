@@ -638,7 +638,7 @@ function mailIcon() {
 }
 
 function checkIcon() {
-  return '<svg class="icn" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9 17.5 20 6.5"/></svg>';
+  return '<span class="hand-check" aria-hidden="true">&#10003;</span>';
 }
 
 function setupDemoBanner() {
