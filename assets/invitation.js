@@ -161,12 +161,24 @@ function renderHero(householdName, subhead, h) {
       <div class="inv-hero-inner">
         <p class="eyebrow">An invitation for</p>
         <h1>${escapeHtml(householdName)}</h1>
+        ${renderChildrenLine(h.children)}
         <div class="inv-hero-asterisk">*</div>
         <p class="inv-hero-subhead">${escapeHtml(subhead)}</p>
         ${hero}
       </div>
     </section>
   `;
+}
+
+// "With Maddie & Morgan" under the adult names; empty when there are no children.
+function renderChildrenLine(children) {
+  const kids = (children || []).map(c => String(c).trim()).filter(Boolean).map(escapeHtml);
+  if (!kids.length) return '';
+  let names;
+  if (kids.length === 1) names = kids[0];
+  else if (kids.length === 2) names = kids[0] + ' &amp; ' + kids[1];
+  else names = kids.slice(0, -1).join(', ') + ' &amp; ' + kids[kids.length - 1];
+  return `<p class="inv-hero-children">With ${names}</p>`;
 }
 
 function renderConfirmedCard(h) {
@@ -317,10 +329,8 @@ function renderLodgingCta(L) {
           <div class="lodging-card">
             <p class="eyebrow" style="margin-bottom: 16px;">Staying off-farm?</p>
             <h3 style="font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2;">Let us know so we can offer your site to another guest.</h3>
-            <p>If you'd rather make other arrangements, just email us and we'll pass your site along. There are a handful of inns in nearby Damariscotta and Rockland; we're happy to share favorites — just ask.</p>
-            <a class="btn btn-secondary btn-small" href="mailto:${WEDDING.contactEmail}">
-              Ask us for ideas &rarr;
-            </a>
+            <p>If you'd rather make other arrangements, just let us know and we'll pass your site along. There are a handful of inns in nearby Damariscotta and Rockland; we're happy to share favorites — just ask.</p>
+            <button type="button" class="btn btn-secondary btn-small" data-action="open-contact">Contact Us</button>
           </div>
         </div>
       </div>
@@ -392,7 +402,7 @@ function renderRegistry() {
         <div class="section-head">
           <p class="eyebrow">If you'd like</p>
           <h2>Registry</h2>
-          <p class="intro">Your presence is the gift, truly. But if you'd like to send something, our registry is here.</p>
+          <p class="intro">Your presence is the gift, truly. But if you'd like to send something or donate to one of the charities dear to our hearts, our registry is here.</p>
         </div>
         <a class="btn btn-coral" href="${WEDDING.registryUrl}" target="_blank" rel="noopener">
           View our registry &#8599;

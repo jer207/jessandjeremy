@@ -41,6 +41,12 @@ const WEDDING = {
   // Off-site accommodation recommendations (shown when a household has no lodge_key assignment)
   accommodations: [
     {
+      name: 'Newcastle Inn',
+      url: 'https://www.newcastleinn.com/',
+      distance: '15 min from venue',
+      note: 'A historic riverside inn in the village of Newcastle, moments from Damariscotta\'s shops and restaurants. The closest stay on this list to the farm, with a well-loved breakfast to start the day.'
+    },
+    {
       name: 'Rockland Harbor Hotel',
       url: 'https://www.rocklandharborhotel.com/',
       distance: '30 min from venue',

@@ -645,6 +645,14 @@ img { max-width: 100%; height: auto; }
   text-transform: uppercase;
   text-wrap: balance;
 }
+.inv-hero-children {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.4vw, 36px);
+  color: var(--olive);
+  line-height: 1.05;
+  margin: 12px 0 0;
+  text-wrap: balance;
+}
 .inv-hero-asterisk {
   display: flex;
   align-items: center;
@@ -1813,12 +1821,16 @@ a.lodging-card-link:hover {
   transform-origin: 50% 50%;
 }
 .loading-flower .petal {
-  fill: var(--sage);
+  fill: none;
   stroke: var(--olive);
-  stroke-width: 1.5;
+  stroke-width: 1.6;
   stroke-linejoin: round;
 }
-.loading-flower .loading-flower-center { fill: var(--gold); }
+.loading-flower .loading-flower-center {
+  fill: none;
+  stroke: var(--olive);
+  stroke-width: 1.6;
+}
 .loading-text {
   font-family: var(--font-display);
   font-size: clamp(26px, 4vw, 40px);
