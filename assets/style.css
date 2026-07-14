@@ -1094,7 +1094,7 @@ a.lodging-card-link:hover {
   transition: max-height 400ms var(--ease-soft), opacity 280ms;
 }
 .accordion-item.open .accordion-panel {
-  max-height: 1200px;
+  max-height: 1600px;
   opacity: 1;
 }
 .accordion-panel-inner {
@@ -1117,6 +1117,17 @@ a.lodging-card-link:hover {
   line-height: 1.6;
   text-wrap: pretty;
 }
+/* Multi-part FAQ answers (e.g. the dress code) */
+.faq-block + .faq-block { margin-top: 20px; }
+.faq-block-h {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--olive);
+  margin-bottom: 4px;
+}
+.faq-block p { margin: 0; }
 
 /* ============================================================
    Forms (lookup, modal fields)
@@ -1817,19 +1828,9 @@ a.lodging-card-link:hover {
   gap: 18px;
 }
 .loading-flower {
+  display: block;
   animation: flower-spin 3.4s cubic-bezier(0.5, 0.1, 0.4, 0.95) infinite;
   transform-origin: 50% 50%;
-}
-.loading-flower .petal {
-  fill: none;
-  stroke: var(--olive);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-}
-.loading-flower .loading-flower-center {
-  fill: none;
-  stroke: var(--olive);
-  stroke-width: 1.6;
 }
 .loading-text {
   font-family: var(--font-display);

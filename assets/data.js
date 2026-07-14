@@ -130,20 +130,20 @@ const WEDDING = {
   ],
   // FAQ items — both tiers share this baseline for now; the user will diverge them over time.
   faqBoth: [
-    { title: 'What should I wear?', body: "Friday is garden-formal (think linen suits, long dresses, comfortable shoes — you'll be walking on grass and forest floor). Saturday is festive coastal — bring a sweater for after dark; October in Maine gets chilly once the sun is down." },
-    { title: 'Can I bring a plus-one?', body: 'Your invitation envelope lists everyone we can fit; the RSVP form will let you confirm each guest by name. If someone is missing who should be there, just email us.' },
+    { title: 'What should I wear?', sections: [
+      { h: 'Friday — Cocktail Attire', p: 'Dress to celebrate! For men, that means a suit, or a jacket with dress trousers — a tie is welcome but not required. For women, a cocktail dress, dressy jumpsuit, or elegant separates all work beautifully. Think polished and festive rather than formal.' },
+      { h: 'Saturday — Smart Casual', p: 'A step more relaxed. Men might wear chinos or dress pants with a collared shirt or sweater — no jacket needed. Women might choose a sundress, skirt, or nice pants with a blouse. Comfortable, put-together, and ready for a good time.' },
+      { h: 'A note on Maine in October', p: "The first weekend of October has been kind to us lately — the last couple of years brought sunshine and temperatures near 70 — but once the sun goes down, it can drop into the 50s. And we hope you'll stick around after dark: we'll be gathered around the campfire late into the evening. Bring a layer you'll be glad to have — a sweater, wrap, or jacket — and footwear that can handle grass and gravel." }
+    ] },
     { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options at every meal. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." },
-    { title: 'Is it kid-friendly?', body: "Yes! Kids are welcome at both days. Friday is more intimate and a bit quieter; Saturday is a loud, joyful party. There's plenty of farmland for them to run." },
-    { title: 'What if I get there early?', body: "Check-in for cabins opens at 3:00 p.m. Friday. If you arrive earlier, leave bags at the main farmhouse and explore — there's a small swimming hole on the property and a herd of friendly goats." },
     { title: 'How do I get from the cabin to the ceremony?', body: "It's a five-minute walk along a lit path. Pack a flashlight (or use your phone) for the walk back after dark on Saturday." }
   ],
   faqDay2: [
-    { title: 'What should I wear?', body: "Saturday is festive coastal — think linen, light layers, comfortable shoes for grass. Bring a sweater for after dark; October in Maine gets chilly once the sun is down." },
-    { title: 'Can I bring a plus-one?', body: 'Your invitation envelope lists everyone we can fit; the RSVP form will let you confirm each guest by name. If someone is missing who should be there, just email us.' },
-    { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." },
-    { title: 'Is it kid-friendly?', body: "Yes! Kids are welcome. Saturday is a loud, joyful party with plenty of farmland for them to run." },
-    { title: 'What if I get there early?', body: 'Saturday gates open at 4:30 p.m. If you arrive earlier, the main farmhouse has porches with rocking chairs and there are a few short trails on the property worth a wander.' },
-    { title: 'Where should I park?', body: "Parking is on the farm in a marked grass field, a short walk from the celebration. Signage at the entrance will guide you in; we'll have helpers near the gate." }
+    { title: 'What should I wear?', sections: [
+      { h: 'Smart Casual', p: 'Comfortable and put-together. Men might wear chinos or dress pants with a collared shirt or sweater — no jacket needed. Women might choose a sundress, skirt, or nice pants with a blouse. Dress to relax, celebrate, and stay awhile.' },
+      { h: 'A note on Maine in October', p: "The first weekend of October has been kind to us lately — the last couple of years brought sunshine and temperatures near 70 — but once the sun goes down, it can drop into the 50s. And we hope you'll stick around after dark: we'll be gathered around the campfire late into the evening. Bring a layer you'll be glad to have — a sweater, wrap, or jacket — and footwear that can handle grass and gravel." }
+    ] },
+    { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." }
   ]
 };
 

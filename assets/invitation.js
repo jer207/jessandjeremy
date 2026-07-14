@@ -430,7 +430,12 @@ function renderThingsToDo() {
 
 function renderFaq(isBoth) {
   const list = isBoth ? (WEDDING.faqBoth || []) : (WEDDING.faqDay2 || []);
-  const items = list.map(it => renderAccordionItem(it.title, it.body, null, null, false));
+  const items = list.map(it => {
+    const raw = it.sections
+      ? it.sections.map(s => `<div class="faq-block"><div class="faq-block-h">${escapeHtml(s.h)}</div><p>${escapeHtml(s.p)}</p></div>`).join('')
+      : null;
+    return renderAccordionItem(it.title, it.body, null, null, false, raw);
+  });
   return `
     <section id="faq" class="inv-section">
       <div class="inv-section-wide">
@@ -443,11 +448,12 @@ function renderFaq(isBoth) {
   `;
 }
 
-function renderAccordionItem(title, body, tags, meta, open) {
+function renderAccordionItem(title, body, tags, meta, open, rawBody) {
   const tagsHtml = tags && tags.length
     ? `<span class="accordion-tags">${tags.map(t => `<span class="accordion-tag">${escapeHtml(t)}</span>`).join('')}</span>`
     : '';
   const metaHtml = meta ? `<div class="accordion-meta">${escapeHtml(meta)}</div>` : '';
+  const bodyHtml = (rawBody != null) ? rawBody : escapeHtml(body);
   return `
     <div class="accordion-item ${open ? 'open' : ''}">
       <button class="accordion-button" type="button">
@@ -458,7 +464,7 @@ function renderAccordionItem(title, body, tags, meta, open) {
       <div class="accordion-panel">
         <div class="accordion-panel-inner">
           ${metaHtml}
-          <div class="accordion-body">${escapeHtml(body)}</div>
+          <div class="accordion-body">${bodyHtml}</div>
         </div>
       </div>
     </div>
