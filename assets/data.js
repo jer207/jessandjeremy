@@ -135,8 +135,7 @@ const WEDDING = {
       { h: 'Saturday — Smart Casual', p: 'A step more relaxed. Men might wear chinos or dress pants with a collared shirt or sweater — no jacket needed. Women might choose a sundress, skirt, or nice pants with a blouse. Comfortable, put-together, and ready for a good time.' },
       { h: 'A note on Maine in October', p: "The first weekend of October has been kind to us lately — the last couple of years brought sunshine and temperatures near 70 — but once the sun goes down, it can drop into the 50s. And we hope you'll stick around after dark: we'll be gathered around the campfire late into the evening. Bring a layer you'll be glad to have — a sweater, wrap, or jacket — and footwear that can handle grass and gravel." }
     ] },
-    { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options at every meal. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." },
-    { title: 'How do I get from the cabin to the ceremony?', body: "It's a five-minute walk along a lit path. Pack a flashlight (or use your phone) for the walk back after dark on Saturday." }
+    { title: 'Will there be vegetarian / gluten-free options?', body: "Yes — there will be thoughtful vegetarian and gluten-free options at every meal. The RSVP form asks for any dietary restrictions; we'll pass everything to the kitchen." }
   ],
   faqDay2: [
     { title: 'What should I wear?', sections: [
