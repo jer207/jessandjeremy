@@ -33,7 +33,7 @@ const WEDDING = {
     { title: 'Lobster Bake & Celebration', body: 'Cocktails at 4:00 p.m., lobster bake at 5:30, dancing with live band and DJ. Casual, larger group.' }
   ],
   // Day-2-only guests see this copy in their single Saturday card.
-  dayTwoDay2Details: "We're keeping the ceremony itself small and quiet, just us and a few others, the day before. We hope you'll join us here for the most important part: the party. Cocktails at 5:00 p.m., Lobster Bake at 6:30, dancing with live band and DJ.",
+  dayTwoDay2Details: "We're keeping the ceremony itself small and quiet, just us and a few others, the day before. We hope you'll join us here for the most important part: the party. Cocktails at 4:00 p.m., Lobster Bake at 5:30pm, dancing with live band and DJ.",
   contactEmail: 'hello@jessandjeremy.com',
   rsvpDeadline: 'August 15, 2026',
   directionsUrl: 'https://maps.app.goo.gl/bbmc8aQQsjghYuvv7',
