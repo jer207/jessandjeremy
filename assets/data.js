@@ -10,7 +10,7 @@ const WEDDING = {
     label: 'Friday, October 2, 2026',
     title: 'Ceremony & Dinner',
     location: "Tops'l Farm, Waldoboro, Maine",
-    details: 'Ceremony at 4:00 p.m. in the woods, followed by dinner in the glass house. Intimate gathering — about 40 guests.'
+    details: 'Please arrive no later than 3pm. The ceremony begins at 3:30pm in the woods and is followed by a cocktail hour and dinner.'
   },
   dayTwo: {
     label: 'Saturday, October 3, 2026',
@@ -30,7 +30,7 @@ const WEDDING = {
   saturdaySections: [
     { title: 'Light Breakfast', body: "We've arranged for some locally baked bagels and delicious condiments to fuel you for the rest of the day." },
     { title: 'Explore Midcoast Maine', body: "While we're busy setting things up, take the opportunity to either rest, relax, and hang out on the beautiful property, or hit the road and check out some of the local attractions — we've listed some fun ideas below." },
-    { title: 'Lobster Bake & Celebration', body: 'Cocktails at 5:00 p.m., lobster bake at 6:30, dancing with live band and DJ. Casual, larger group.' }
+    { title: 'Lobster Bake & Celebration', body: 'Cocktails at 4:00 p.m., lobster bake at 5:30, dancing with live band and DJ. Casual, larger group.' }
   ],
   // Day-2-only guests see this copy in their single Saturday card.
   dayTwoDay2Details: "We're keeping the ceremony itself small and quiet, just us and a few others, the day before. We hope you'll join us here for the most important part: the party. Cocktails at 5:00 p.m., Lobster Bake at 6:30, dancing with live band and DJ.",
